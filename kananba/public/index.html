@@ -464,6 +464,23 @@ body{transition:background-color .25s ease,color .25s ease}
 .beb-add{width:42px;height:40px;border:0;border-radius:10px;background:var(--brasa);color:var(--sobre-brasa);font-size:24px;font-weight:700;line-height:1}
 .beb .qtd button{width:38px;height:38px}
 .beb .em-breve{padding:6px 10px;font-size:12px}
+
+/* sugestões compactas: cabem várias sem a caixa crescer demais */
+.sug-lista{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px}
+.sug{padding:8px;gap:2px;border-radius:10px}
+.sug-ico svg{width:20px;height:20px}
+.sug-nome{font-size:13px}
+.sug-nome small{display:block;font-weight:500;color:var(--texto-3);font-size:11.5px}
+.sug b{font-size:13px}
+.sug-titulo{font-size:18px;margin-bottom:6px}
+.sugestao{padding:10px}
+
+/* sugestões em pílulas compactas */
+.sug-lista{display:flex;flex-wrap:wrap;gap:6px}
+.sug{flex-direction:row;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;width:auto}
+.sug-nome{font-size:13.5px;white-space:nowrap}
+.sug-nome small{display:inline;font-size:12px}
+.sug b{font-size:13px;white-space:nowrap}
 </style>
 </head><body>
 
@@ -1022,11 +1039,20 @@ function renderSugestao(){
     const top = DESTAQUES.ids[grupo]; lista.sort((a,b)=>(b.id===top)-(a.id===top));
     return lista.slice(0,n);
   };
-  const itens = [...(temAcomp?[]:pega("acomp",2)), ...(temBebida?[]:pega("bebidas",2))];
+  // bebidas: uma de cada tipo (refri, suco e cerveja), começando pela mais pedida
+  const bebidas = () => {
+    const disp = CARDAPIO.filter(i=>i.grupo==="bebidas" && i.preco!=null && !carrinho[i.id]);
+    const top = disp.find(i=>i.id===DESTAQUES.ids.bebidas);
+    const ordem = ["refris","sucos","cervejas"];
+    const out = top ? [top] : [];
+    ordem.forEach(sub=>{ if(!out.some(o=>o.sub===sub)){ const x=disp.find(i=>i.sub===sub); if(x) out.push(x); } });
+    return out.slice(0,3);
+  };
+  const itens = [...(temAcomp?[]:pega("acomp",2)), ...(temBebida?[]:bebidas())];
   if(!itens.length){ box.hidden = true; return; }
   box.hidden = false;
   box.innerHTML = `<div class="sug-titulo">${!temAcomp&&!temBebida?"Que tal acompanhar o espeto?":!temAcomp?"Faltou o acompanhamento?":"E pra beber?"}</div>
-    <div class="sug-lista">${itens.map(i=>`<button type="button" class="sug" data-sug="${i.id}"><span class="sug-ico">${i.grupo==="bebidas"?svgCopo():svgPote()}</span><span class="sug-nome">${i.nome}${DESTAQUES.ids[i.grupo]===i.id?' <small>⭐</small>':''}</span><b>+ ${brl(i.preco)}</b></button>`).join("")}</div>`;
+    <div class="sug-lista">${itens.map(i=>`<button type="button" class="sug" data-sug="${i.id}"><span class="sug-nome">${i.grupo==="bebidas"?(i.sub==="sucos"?i.nome:`${i.nomeCurto} <small>${i.sub==="cervejas"?"lata":i.secao.replace(/^(Refrigerante|Cerveja) ?/,"").replace(" 350 ml","")}</small>`):i.nome}${DESTAQUES.ids[i.grupo]===i.id?' ⭐':''}</span><b>+ ${brl(i.preco)}</b></button>`).join("")}</div>`;
   box.querySelectorAll("[data-sug]").forEach(b=>b.onclick=()=>{ mudar(b.dataset.sug, +1); renderCheckout(); });
 }
 function renderCheckout(){
