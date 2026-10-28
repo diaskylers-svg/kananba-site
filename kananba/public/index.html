@@ -1,5 +1,6 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="description" content="KANANBA Espetos: espetos de churrasco por delivery. Peça pelo site, pague no Pix e acompanhe seu pedido ao vivo."><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>[hidden]{display:none!important}</style>
 <title>KANANBA Espetos</title>
+<script>try{var t=localStorage.getItem("kananba-tema");if(!t)t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
@@ -149,7 +150,7 @@ textarea::placeholder,input::placeholder{color:var(--texto-3)}
 
 /* Barra do pedido */
 body::after{content:"";position:fixed;inset:auto 0 0;height:env(safe-area-inset-bottom,0px);background:var(--carvao);z-index:20}
-.barra{position:fixed;left:0;right:0;bottom:0;z-index:21;background:rgba(10,13,18,.94);backdrop-filter:blur(8px);border-top:1px solid var(--linha);
+.barra{position:fixed;left:0;right:0;bottom:0;z-index:21;background:color-mix(in srgb,var(--carvao) 94%,transparent);backdrop-filter:blur(8px);border-top:1px solid var(--linha);
   padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .barra-in{max-width:980px;margin:0 auto;display:flex;align-items:center;gap:12px}
 .barra-resumo{flex:1;min-width:0}
@@ -159,10 +160,30 @@ body::after{content:"";position:fixed;inset:auto 0 0;height:env(safe-area-inset-
 .btn-principal:disabled{background:var(--grelha-2);color:var(--texto-3);cursor:default}
 
 /* Painéis (checkout e atendente) */
-.fundo{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:30}
-.painel{position:fixed;z-index:31;left:0;right:0;bottom:0;max-height:92%;overflow:auto;background:var(--carvao);border-top:1px solid var(--linha);border-radius:18px 18px 0 0;
-  padding:20px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-@media (min-width:760px){.painel{left:50%;right:auto;width:620px;transform:translateX(-50%);bottom:24px;border-radius:18px;border:1px solid var(--linha)}}
+.fundo{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);z-index:30}
+/* Caixa do pedido: flutuante, com a barra de brasa brilhando na borda (mesmo efeito do cadastro de dispositivos) */
+.painel{--bar:var(--brasa);position:fixed;z-index:31;
+  left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));bottom:calc(10px + env(safe-area-inset-bottom,0px));
+  max-height:calc(100% - 20px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+  display:flex;flex-direction:column;overflow:hidden;border-radius:20px;
+  border:1px solid color-mix(in srgb,var(--bar) 35%,var(--linha));
+  background:linear-gradient(90deg,color-mix(in srgb,var(--bar) 11%,transparent) 0,transparent 240px),var(--carvao);
+  box-shadow:0 24px 60px -18px rgba(0,0,0,.6),0 0 0 1px color-mix(in srgb,var(--bar) 14%,transparent),0 8px 34px -12px color-mix(in srgb,var(--bar) 55%,transparent);
+  animation:flutua .28s cubic-bezier(.2,.8,.2,1)}
+.painel::before{content:"";position:absolute;z-index:2;left:-1px;top:-1px;bottom:-1px;width:6px;border-radius:20px 0 0 20px;pointer-events:none;
+  background:linear-gradient(180deg,transparent 0%,rgba(255,255,255,.55) 50%,transparent 100%) no-repeat,var(--bar);
+  background-size:100% 40%,auto;background-position:0 -60%,0 0;
+  box-shadow:0 0 14px color-mix(in srgb,var(--bar) 55%,transparent);
+  animation:barShine 3.2s ease-in-out infinite;transition:width .2s ease,box-shadow .2s ease}
+.painel:hover::before{width:9px;box-shadow:0 0 22px color-mix(in srgb,var(--bar) 75%,transparent)}
+.painel-rolagem{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:20px 18px 20px 26px}
+@keyframes barShine{0%{background-position:0 -60%,0 0}60%,100%{background-position:0 170%,0 0}}
+@keyframes flutua{from{opacity:0;transform:translateY(24px) scale(.98)}}
+@media (min-width:760px){
+  .painel{left:50%;right:auto;width:620px;top:50%;bottom:auto;max-height:min(88vh,860px);transform:translate(-50%,-50%);animation-name:flutuaCentro}
+  @keyframes flutuaCentro{from{opacity:0;transform:translate(-50%,-46%) scale(.98)}}
+}
+@media (prefers-reduced-motion:reduce){.painel,.painel::before{animation:none}}
 .painel-cab{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
 .painel-cab h3{font-family:var(--f-display);font-weight:900;font-size:28px;text-transform:uppercase;margin:0}
 .fechar{border:1px solid var(--linha);background:transparent;border-radius:10px;width:40px;height:40px;font-size:20px;color:var(--texto-2)}
@@ -241,7 +262,7 @@ input[type=text],input[type=tel],select{background:var(--grelha-2);border:1px so
 .passo.feito{color:var(--texto-2)}
 .passo.feito .bola{background:var(--brasa);border-color:var(--brasa);color:var(--sobre-brasa)}
 .rot{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-@media (max-width:380px){.rot{display:none}.passo.atual .rot{display:block}}
+
 .etapa{animation:entra .25s ease}
 @keyframes entra{from{opacity:0;transform:translateX(14px)}}
 @media (prefers-reduced-motion:reduce){.etapa{animation:none}.prog i{transition:none}}
@@ -300,7 +321,7 @@ input[type=text]:focus,input[type=tel]:focus{outline:none;border-color:var(--bra
 .linha-tempo li.atual .lt-bola{border-color:var(--brasa);color:var(--brasa);box-shadow:0 0 0 4px var(--brasa-fundo)}
 .linha-tempo li.feito .lt-bola{background:var(--brasa);border-color:var(--brasa);color:var(--sobre-brasa)}
 .acomp-total{font-family:var(--f-display);font-size:22px}
-.barra-acomp{position:fixed;z-index:23;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);border:1px solid var(--brasa);background:rgba(19,25,34,.96);backdrop-filter:blur(8px);color:var(--texto);border-radius:999px;padding:10px 16px;font:inherit;font-size:14px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.4);cursor:pointer;white-space:nowrap}
+.barra-acomp{position:fixed;z-index:23;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);border:1px solid var(--brasa);background:color-mix(in srgb,var(--grelha) 96%,transparent);backdrop-filter:blur(8px);color:var(--texto);border-radius:999px;padding:10px 16px;font:inherit;font-size:14px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.4);cursor:pointer;white-space:nowrap}
 .barra-acomp b{color:var(--brasa-forte)}
 .ba-ponto{width:9px;height:9px;border-radius:50%;background:var(--brasa);flex:none}
 .ba-ponto.s-aguardando_pagamento{background:var(--aviso)}
@@ -342,11 +363,36 @@ input[type=text]:focus,input[type=tel]:focus{outline:none;border-color:var(--bra
 @media (prefers-reduced-motion:no-preference){.slot.cheio .slot-ico{animation:encaixa .25s ease}@keyframes encaixa{from{transform:scale(.4) rotate(-20deg);opacity:0}}}
 .sabor-nome{display:flex;align-items:center;gap:10px}
 .sabor-ico svg{width:28px;height:28px;display:block}
+
+/* ===== Modo claro ===== */
+:root[data-theme="light"]{
+  color-scheme:light;
+  --carvao:#EEF1F2; --grelha:#FFFFFF; --grelha-2:#F5F7F8; --linha:#D7DCDF;
+  --texto:#1B222B; --texto-2:#5B6570; --texto-3:#8A93A0;
+  --brasa-forte:#C97200; --brasa-fundo:rgba(255,152,0,.14);
+  --ok:#2E7D32; --azul:#212C79; --azul-fundo:#EEF0FB;
+  --aviso:#B4720E; --aviso-fundo:rgba(180,114,14,.12);
+}
+/* o topo continua "noite de brasa" nos dois modos */
+:root[data-theme="light"] .topo{
+  --carvao:#0a0d12; --grelha:#131922; --grelha-2:#161d27; --linha:#1e2530;
+  --texto:#e7eaf1; --texto-2:#8b93a4; --texto-3:#565f70; --brasa-forte:#FFB65C; color:var(--texto)}
+:root[data-theme="light"] .btn-whats{color:#fff}
+:root[data-theme="light"] .painel{box-shadow:0 24px 60px -18px rgba(27,34,43,.35),0 0 0 1px color-mix(in srgb,var(--bar) 18%,transparent),0 8px 34px -12px color-mix(in srgb,var(--bar) 55%,transparent)}
+:root[data-theme="light"] .fundo{background:rgba(27,34,43,.35)}
+:root[data-theme="light"] .item,:root[data-theme="light"] .aviso-inicio{box-shadow:0 1px 2px rgba(27,34,43,.06),0 12px 32px -16px rgba(27,34,43,.18)}
+:root[data-theme="light"] .pix-qr{border:1px solid var(--linha)}
+body{transition:background-color .25s ease,color .25s ease}
+
+/* botão de tema */
+.topo>.btn-tema{position:absolute;z-index:3;top:12px;left:12px;display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#e7eaf1;border-radius:999px;padding:7px 12px 7px 9px;font-size:13px;font-weight:600;backdrop-filter:blur(6px)}
+.topo>.btn-tema:hover{border-color:#fff;background:rgba(255,255,255,.16)}
+.btn-tema svg{width:18px;height:18px;flex:none}
 </style>
 </head><body>
 
 <div class="wrap">
-  <header class="topo"><div class="hero-bg" aria-hidden="true"><svg class="hero-cena" viewBox="0 0 400 160" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+  <header class="topo"><button type="button" class="btn-tema" id="btn-tema" aria-label="Alternar entre modo claro e escuro"></button><div class="hero-bg" aria-hidden="true"><svg class="hero-cena" viewBox="0 0 400 160" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
 <defs>
 <radialGradient id="gc" cx=".45" cy=".35" r=".8"><stop offset="0" stop-color="#b8582c"/><stop offset=".55" stop-color="#7a2c10"/><stop offset="1" stop-color="#341104"/></radialGradient>
 <radialGradient id="gf" cx=".45" cy=".35" r=".8"><stop offset="0" stop-color="#f3b860"/><stop offset=".55" stop-color="#c57826"/><stop offset="1" stop-color="#6e3a0c"/></radialGradient>
@@ -408,7 +454,7 @@ input[type=text]:focus,input[type=tel]:focus{outline:none;border-color:var(--bra
 
 <div class="fundo" id="fundo" hidden></div>
 
-<section class="painel" id="checkout" hidden aria-labelledby="t-check">
+<section class="painel" id="checkout" hidden aria-labelledby="t-check"><div class="painel-rolagem" id="checkout-rolagem">
   <div class="painel-cab"><h3 id="t-check">Seu pedido</h3><button class="fechar" type="button" data-fechar aria-label="Fechar">✕</button></div>
   <div class="acomp" id="acomp" hidden aria-live="polite"></div>
   <div id="area-pedido">
@@ -423,28 +469,24 @@ input[type=text]:focus,input[type=tel]:focus{outline:none;border-color:var(--bra
     <div class="prog" aria-hidden="true"><i id="prog-barra"></i></div>
     <nav class="stepper" id="stepper" aria-label="Etapas para finalizar"></nav>
 
-    <!-- 1 NOME -->
-    <div class="etapa" data-etapa="nome">
-      <div class="etapa-cab"><span class="etapa-num" data-num></span><h4>Como podemos te chamar?</h4><p>É o nome que vai no pedido e que o entregador vai procurar.</p></div>
-      <p class="boas-vindas" id="boas-vindas" hidden>Que bom te ver de novo! Já deixamos seus dados do último pedido. É só conferir e avançar.</p>
-      <label class="campo">Seu nome<input type="text" id="c-nome" autocomplete="name" placeholder="Ex.: Bruno Costa" data-req></label>
+    <!-- 1 SEUS DADOS -->
+    <div class="etapa" data-etapa="dados">
+      <div class="etapa-cab"><span class="etapa-num" data-num></span><h4>Seus dados</h4><p>Pra identificar o pedido e o entregador falar com você.</p></div>
+      <p class="boas-vindas" id="boas-vindas" hidden>Que bom te ver de novo! Já deixamos seus dados do último pedido. É só conferir e continuar.</p>
+      <div class="campos">
+        <label class="campo cheio">Seu nome<input type="text" id="c-nome" autocomplete="name" placeholder="Ex.: Bruno Costa" data-req></label>
+        <div class="campo meio">
+          <label class="campo">CPF<input type="text" id="c-cpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" data-req></label>
+          <p class="dica" id="cpf-status"></p>
+        </div>
+        <div class="campo meio">
+          <label class="campo">Celular com DDD<input type="tel" id="c-tel" inputmode="tel" autocomplete="tel-national" placeholder="(48) 99999-9999" maxlength="15" data-req></label>
+          <label class="check"><input type="checkbox" id="c-telwhats" checked> Também é WhatsApp</label>
+        </div>
+      </div>
     </div>
 
-    <!-- 2 CPF -->
-    <div class="etapa" data-etapa="cpf" hidden>
-      <div class="etapa-cab"><span class="etapa-num" data-num></span><h4>Seu CPF</h4><p>Usamos só para identificar o pedido e emitir nota, se precisar.</p></div>
-      <label class="campo">CPF<input type="text" id="c-cpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" data-req></label>
-      <p class="dica" id="cpf-status"></p>
-    </div>
-
-    <!-- 3 CONTATO -->
-    <div class="etapa" data-etapa="contato" hidden>
-      <div class="etapa-cab"><span class="etapa-num" data-num></span><h4>Número para contato</h4><p>Se o entregador precisar falar com você, é nesse número que ele liga.</p></div>
-      <label class="campo">Celular com DDD<input type="tel" id="c-tel" inputmode="tel" autocomplete="tel-national" placeholder="(48) 99999-9999" maxlength="15" data-req></label>
-      <label class="check"><input type="checkbox" id="c-telwhats" checked> Esse número também é WhatsApp</label>
-    </div>
-
-    <!-- 4 ENDEREÇO -->
+    <!-- 2 ENTREGA -->
     <div class="etapa" data-etapa="endereco" hidden>
       <div class="etapa-cab"><span class="etapa-num" data-num></span><h4>Onde vamos entregar?</h4><p>Digite o CEP que a gente preenche a rua e o bairro.</p></div>
       <div class="opcoes" id="op-entrega" style="margin-bottom:14px"></div>
@@ -464,7 +506,7 @@ input[type=text]:focus,input[type=tel]:focus{outline:none;border-color:var(--bra
       <p class="retirada-info" id="retirada-info" hidden>Você retira no KANANBA. Acompanhe por aqui: avisamos na tela quando estiver pronto.</p>
     </div>
 
-    <!-- 5 PAGAMENTO -->
+    <!-- 3 PAGAMENTO -->
     <div class="etapa" data-etapa="pagamento" hidden>
       <div class="etapa-cab"><span class="etapa-num" data-num></span><h4>Forma de pagamento</h4><p>Confira os valores e escolha como vai pagar.</p></div>
       <div class="totais" id="totais"></div>
@@ -484,9 +526,9 @@ input[type=text]:focus,input[type=tel]:focus{outline:none;border-color:var(--bra
     </div>
   </div>
   </div>
-</section>
+</div></section>
 
-<section class="painel" id="chat" hidden aria-labelledby="t-chat">
+<section class="painel" id="chat" hidden aria-labelledby="t-chat"><div class="painel-rolagem">
   <div class="painel-cab"><h3 id="t-chat">Atendimento</h3><button class="fechar" type="button" data-fechar aria-label="Fechar">✕</button></div>
   <div class="chat-msgs" id="chat-msgs" aria-live="polite"></div>
   <div class="sugestoes" id="sugestoes"></div>
@@ -494,7 +536,7 @@ input[type=text]:focus,input[type=tel]:focus{outline:none;border-color:var(--bra
     <input type="text" id="chat-in" placeholder="Escreva sua dúvida ou pedido" autocomplete="off">
     <button class="btn-principal" type="submit" id="chat-enviar">Enviar</button>
   </form>
-</section>
+</div></section>
 
 <script type="module">
 /* Cardápio, preços e taxa ficam em loja.mjs (o servidor usa o mesmo arquivo) */
@@ -666,10 +708,8 @@ function opcoes(cont, lista, atual, aoEscolher){
 }
 /* ===== Finalizar por etapas: nome → CPF → contato → endereço → pagamento ===== */
 const ETAPAS = [
-  {id:"nome", rot:"Nome"},
-  {id:"cpf", rot:"CPF"},
-  {id:"contato", rot:"Contato"},
-  {id:"endereco", rot:"Endereço"},
+  {id:"dados", rot:"Seus dados"},
+  {id:"endereco", rot:"Entrega"},
   {id:"pagamento", rot:"Pagamento"}
 ];
 let etapaAtual = 0;
@@ -687,9 +727,11 @@ function mascCEP(v){ v=so(v).slice(0,8); return v.length>5? v.slice(0,5)+"-"+v.s
 
 function faltaEtapa(id){
   const f=[];
-  if(id==="nome" && val("c-nome").length<2) f.push(["c-nome","seu nome"]);
-  if(id==="cpf" && !cpfValido(val("c-cpf"))) f.push(["c-cpf", so(val("c-cpf")).length? "um CPF válido":"seu CPF"]);
-  if(id==="contato" && so(val("c-tel")).length<10) f.push(["c-tel","um celular com DDD"]);
+  if(id==="dados"){
+    if(val("c-nome").length<2) f.push(["c-nome","seu nome"]);
+    if(!cpfValido(val("c-cpf"))) f.push(["c-cpf", so(val("c-cpf")).length? "um CPF válido":"seu CPF"]);
+    if(so(val("c-tel")).length<10) f.push(["c-tel","um celular com DDD"]);
+  }
   if(id==="endereco" && pedido.entrega==="Entrega"){
     if(!val("c-rua")) f.push(["c-rua","a rua"]);
     if(!val("c-num") && !$("c-semnum").checked) f.push(["c-num","o número"]);
@@ -713,7 +755,7 @@ function enderecoTxt(){
 function taxaTxt(){ return pedido.entrega!=="Entrega" ? "Grátis (retirada)" : (NEGOCIO.taxaEntrega==null? "a combinar" : brl(NEGOCIO.taxaEntrega)); }
 
 function renderEtapas(){
-  ETAPAS[3].rot = pedido.entrega==="Entrega"? "Endereço":"Retirada";
+  ETAPAS[1].rot = pedido.entrega==="Entrega"? "Entrega":"Retirada";
   const atual = ETAPAS[etapaAtual].id;
   document.querySelectorAll(".finalizar .etapa").forEach(el=>el.hidden = el.dataset.etapa!==atual);
   document.querySelectorAll("[data-num]").forEach(el=>el.textContent = `Passo ${etapaAtual+1} de ${ETAPAS.length}`);
@@ -808,10 +850,8 @@ function renderPagamento(){
   const bloco = (rot, txt, i)=>`<div class="rev-bloco"><div><small>${rot}</small>${txt}</div><button type="button" class="alterar" data-ir="${i}">Alterar</button></div>`;
   const esc = t=>t.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   $("revisao").innerHTML =
-    bloco("Nome", esc(val("c-nome")), 0) +
-    bloco("CPF", esc(val("c-cpf")), 1) +
-    bloco("Contato", esc(val("c-tel"))+($("c-telwhats").checked?" · WhatsApp":""), 2) +
-    bloco(pedido.entrega==="Entrega"?"Entrega em":"Recebimento", pedido.entrega==="Entrega"? esc(enderecoTxt())+(val("c-ref")?`<br><span style="color:var(--texto-2)">Ref.: ${esc(val("c-ref"))}</span>`:"") : "Retirada no local", 3);
+    bloco("Seus dados", `${esc(val("c-nome"))}<br><span style="color:var(--texto-2)">CPF ${esc(val("c-cpf"))} · ${esc(val("c-tel"))}${$("c-telwhats").checked?" · WhatsApp":""}</span>`, 0) +
+    bloco(pedido.entrega==="Entrega"?"Entrega em":"Recebimento", pedido.entrega==="Entrega"? esc(enderecoTxt())+(val("c-ref")?`<br><span style="color:var(--texto-2)">Ref.: ${esc(val("c-ref"))}</span>`:"") : "Retirada no local", 1);
   $("revisao").querySelectorAll("[data-ir]").forEach(b=>b.onclick=()=>irPara(+b.dataset.ir));
   atualizarWhats();
 }
@@ -894,7 +934,7 @@ function mostrarAcomp(){
   $("fundo").hidden=false; $("checkout").hidden=false;
   $("area-pedido").hidden=true; $("acomp").hidden=false; $("barra-acomp").hidden=true;
   $("t-check").textContent = `Pedido #${acomp.dados.codigo}`;
-  renderAcomp(); agendarPoll(); $("checkout").scrollTop=0;
+  renderAcomp(); agendarPoll(); $("checkout-rolagem").scrollTop=0;
 }
 function voltarParaCardapio(){
   $("area-pedido").hidden=false; $("acomp").hidden=true; $("t-check").textContent="Seu pedido";
@@ -1006,6 +1046,21 @@ $("barra-acomp").onclick = ()=>{ if(acomp) mostrarAcomp(); };
     atualizarBarraAcomp(); agendarPoll();
   }catch(e){}
 })();
+
+
+/* ===== Modo claro / escuro ===== */
+const ICO_SOL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>';
+const ICO_LUA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>';
+function aplicarTema(t){
+  document.documentElement.setAttribute("data-theme", t);
+  try{ localStorage.setItem("kananba-tema", t); }catch(e){}
+  const claro = t==="light";
+  $("btn-tema").innerHTML = (claro?ICO_LUA:ICO_SOL) + `<span>${claro?"Modo escuro":"Modo claro"}</span>`;
+  $("btn-tema").setAttribute("aria-pressed", String(claro));
+  const mt=document.querySelector('meta[name="theme-color"]'); if(mt) mt.content = claro?"#EEF1F2":"#0a0d12";
+}
+$("btn-tema").onclick = ()=>aplicarTema(document.documentElement.getAttribute("data-theme")==="light"?"dark":"light");
+aplicarTema(document.documentElement.getAttribute("data-theme")==="light"?"light":"dark");
 
 /* Painéis */
 function abrir(id){ $("fundo").hidden=false; $(id).hidden=false; $("barra-acomp").hidden=true; if(id==="checkout"){ voltarParaCardapio(); etapaAtual=0; renderCheckout(); } }
