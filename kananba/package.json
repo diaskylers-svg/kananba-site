@@ -1,0 +1,9 @@
+{
+  "name": "kananba-site",
+  "private": true,
+  "type": "module",
+  "description": "Site de pedidos do KANANBA Espetos com Pix e painel dos bastidores",
+  "dependencies": {
+    "@netlify/blobs": "^11.1.7"
+  }
+}
