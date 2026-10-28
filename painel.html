@@ -139,6 +139,26 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
   body.imprimindo .c-acoes, body.imprimindo .dados a{display:none!important}
   body.imprimindo *{color:#000!important;background:#fff!important}
 }
+
+/* ---------- seções / fotos ---------- */
+.secoes{max-width:1280px;margin:12px auto 0;padding:0 16px;display:flex;gap:8px}
+.secao{border:1px solid var(--linha);background:var(--grelha);color:var(--texto-2);border-radius:12px;padding:10px 16px;font-weight:700}
+.secao[aria-selected="true"]{border-color:var(--brasa);color:var(--texto);box-shadow:inset 0 -3px 0 var(--brasa)}
+#sec-fotos{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
+.fotos-intro h2{font-family:var(--f-display);font-weight:900;font-size:30px;text-transform:uppercase;margin:4px 0}
+.fotos-intro p{color:var(--texto-2);margin:0 0 16px;max-width:720px}
+.grupo-fotos{margin-bottom:22px}
+.grupo-fotos h3{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--texto-3);margin:0 0 10px}
+.grade-fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.fcard{background:var(--grelha);border:1px solid var(--linha);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.fcard .fimg{aspect-ratio:4/3;background:var(--grelha-2);display:grid;place-items:center;color:var(--texto-3);font-size:13px;position:relative}
+.fcard .fimg img{width:100%;height:100%;object-fit:cover;display:block}
+.fcard .fimg.carregando::after{content:"Enviando…";position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.55);color:#fff;font-weight:700}
+.fcard .fcorpo{padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px}
+.fcard b{font-size:15px}
+.fcard .facoes{display:flex;gap:6px}
+.fcard .facoes label{flex:1;text-align:center;cursor:pointer}
+.fcard input[type=file]{display:none}
 </style>
 </head>
 <body>
@@ -169,7 +189,18 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
       </div>
     </div>
   </header>
-  <main>
+  <nav class="secoes" role="tablist" aria-label="Seções do painel">
+    <button class="secao" role="tab" data-secao="pedidos" aria-selected="true">📋 Pedidos</button>
+    <button class="secao" role="tab" data-secao="fotos" aria-selected="false">📷 Fotos do cardápio</button>
+  </nav>
+  <section id="sec-fotos" hidden>
+    <div class="fotos-intro">
+      <h2>Fotos do cardápio</h2>
+      <p>Toque em <b>Escolher foto</b> em cada item. A foto aparece no site na hora. Dica: use fotos quadradas, bem iluminadas, com o espeto ocupando quase tudo.</p>
+    </div>
+    <div id="fotos-lista"></div>
+  </section>
+  <main id="sec-pedidos">
     <div class="aviso-cfg" id="aviso-pix" hidden>O Pix ainda não está configurado (falta o MP_ACCESS_TOKEN na Netlify). Os clientes só conseguem pagar na entrega.</div>
     <div class="numeros" id="numeros"></div>
     <div class="abas" id="abas" role="tablist"></div>
@@ -178,6 +209,7 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
 </div>
 
 <script type="module">
+import { CARDAPIO, COMBOS } from "./loja.mjs";
 const $ = id => document.getElementById(id);
 const brl = v => (v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -346,7 +378,7 @@ function cartao(p){
   return `<article class="card ${recentes.has(p.id)?"recente":""}" id="card-${p.id}">
     <div class="c-topo">
       <div><div class="c-cod">#${esc(p.codigo)}</div><div class="c-hora">${hora(p.criadoEm)} · há ${minutos<60?minutos+" min":Math.floor(minutos/60)+"h"+String(minutos%60).padStart(2,"0")}</div></div>
-      <div class="c-tags">${tagPagamento(p)}<span class="tag tag-modo">${ent.modo==="Entrega"?"🛵 Entrega":"🏃 Retirada"}</span></div>
+      <div class="c-tags">${p.canceladoPor==="cliente"?`<span class="tag tag-cinza">Cliente desistiu</span>`:""}${tagPagamento(p)}<span class="tag tag-modo">${ent.modo==="Entrega"?"🛵 Entrega":"🏃 Retirada"}</span></div>
     </div>
     <ul class="itens">${p.itens.map(i => `<li><span class="q">${i.qtd}×</span><span class="i-nome">${esc(i.nome)}</span><span class="i-preco">${brl(i.total)}</span>${i.detalhe?`<span class="i-obs" style="color:var(--texto)">🍢 ${esc(i.detalhe)}</span>`:""}${i.ponto||i.obs?`<span class="i-obs">⚠ ${esc([i.ponto,i.obs].filter(Boolean).join(" · "))}</span>`:""}</li>`).join("")}</ul>
     ${p.obsGeral?`<div class="obs-geral">⚠ ${esc(p.obsGeral)}</div>`:""}
@@ -389,6 +421,69 @@ function aplicarTema(t){
 }
 $("btn-tema").onclick = () => aplicarTema(document.documentElement.getAttribute("data-theme")==="light" ? "dark" : "light");
 aplicarTema(document.documentElement.getAttribute("data-theme")==="light" ? "light" : "dark");
+
+
+/* ---------- seções ---------- */
+document.querySelectorAll(".secao").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".secao").forEach(x => x.setAttribute("aria-selected", x===b));
+  const fotos = b.dataset.secao==="fotos";
+  $("sec-fotos").hidden = !fotos; $("sec-pedidos").hidden = fotos;
+  if(fotos) carregarFotos();
+});
+
+/* ---------- fotos do cardápio ---------- */
+let fotos = {};
+async function carregarFotos(){
+  try{ fotos = (await (await fetch("/api/fotos", {cache:"no-store"})).json()).fotos || {}; }catch(e){ fotos = {}; }
+  renderFotos();
+}
+function renderFotos(){
+  const grupos = [
+    ["Combos", COMBOS],
+    ["Espetos", CARDAPIO.filter(i => i.grupo==="espetos")],
+    ["Acompanhamentos", CARDAPIO.filter(i => i.grupo==="acomp")]
+  ];
+  $("fotos-lista").innerHTML = grupos.map(([nome, itens]) => `<div class="grupo-fotos"><h3>${nome}</h3><div class="grade-fotos">${itens.map(it => `
+    <div class="fcard" id="fc-${it.id}">
+      <div class="fimg">${fotos[it.id] ? `<img src="/api/foto/${it.id}?v=${fotos[it.id]}" alt="${esc(it.nome)}">` : "Sem foto"}</div>
+      <div class="fcorpo"><b>${esc(it.nome)}</b>
+        <div class="facoes">
+          <label class="btn-sec">${fotos[it.id] ? "Trocar foto" : "Escolher foto"}<input type="file" accept="image/*" data-foto="${it.id}"></label>
+          ${fotos[it.id] ? `<button class="btn-perigo" data-remover="${it.id}" type="button">Remover</button>` : ""}
+        </div>
+      </div>
+    </div>`).join("")}</div></div>`).join("");
+  $("fotos-lista").querySelectorAll("[data-foto]").forEach(inp => inp.onchange = () => inp.files[0] && enviarFoto(inp.dataset.foto, inp.files[0]));
+  $("fotos-lista").querySelectorAll("[data-remover]").forEach(b => b.onclick = () => removerFoto(b.dataset.remover));
+}
+// reduz a foto no próprio aparelho (máx. 1200px) para subir rápido
+function prepararImagem(arquivo){
+  return new Promise((ok, falha) => {
+    const url = URL.createObjectURL(arquivo), img = new Image();
+    img.onload = () => {
+      const max = 1200, k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas"); c.width = Math.round(img.width*k); c.height = Math.round(img.height*k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url); ok(c.toDataURL("image/jpeg", 0.86));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); falha(new Error("Não consegui abrir essa imagem. Tente uma foto JPG ou PNG.")); };
+    img.src = url;
+  });
+}
+async function enviarFoto(id, arquivo){
+  const box = document.querySelector(`#fc-${id} .fimg`); box.classList.add("carregando");
+  try{
+    const imagem = await prepararImagem(arquivo);
+    const d = await api("foto", {method:"POST", body:JSON.stringify({id, imagem})});
+    fotos = d.fotos; renderFotos();
+  }catch(e){ if(e.message!=="401") alert(e.message); box.classList.remove("carregando"); }
+}
+async function removerFoto(id){
+  const it = [...CARDAPIO, ...COMBOS].find(i => i.id===id);
+  if(!confirm(`Remover a foto de "${it?.nome||id}"?`)) return;
+  try{ const d = await api("foto-remover", {method:"POST", body:JSON.stringify({id})}); fotos = d.fotos; renderFotos(); }
+  catch(e){ if(e.message!=="401") alert(e.message); }
+}
 
 /* ---------- início ---------- */
 if(senha){ api("ping").then(entrar).catch(()=>{}); } else { $("senha").focus(); }
