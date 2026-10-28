@@ -112,6 +112,24 @@ export async function mpConsultar(mpId) {
   return r.json();
 }
 
+/* Cancela um Pix ainda não pago, pra o cliente não conseguir pagar depois de desistir */
+export async function mpCancelar(mpId) {
+  const r = await fetch(`${MP_API()}/v1/payments/${encodeURIComponent(mpId)}`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${mpToken()}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ status: "cancelled" })
+  });
+  if (!r.ok) console.error("Não deu para cancelar o Pix no Mercado Pago", mpId, r.status);
+  return r.ok;
+}
+
+/* O cliente só pode desistir antes de ir pra brasa. Pix já pago: precisa falar com a loja (devolução). */
+export function podeDesistir(p) {
+  if (p.status === "aguardando_pagamento") return true;
+  if (p.status === "novo" && p.pagamento.status !== "pago") return true;
+  return false;
+}
+
 /* Atualiza o pedido com o que o Mercado Pago diz sobre o pagamento. Retorna true se mudou. */
 export function aplicarPagamento(pedido, pg) {
   if (!pedido || pedido.pagamento.forma !== "Pix") return false;
@@ -173,7 +191,9 @@ export function visaoCliente(p) {
       qrImg: p.pagamento.status === "pendente" ? p.pagamento.qrImg : null,
       expiraEm: p.pagamento.expiraEm || null
     },
-    historico: p.historico
+    historico: p.historico,
+    canceladoPor: p.canceladoPor || null,
+    podeDesistir: podeDesistir(p)
   };
 }
 

@@ -393,6 +393,12 @@ body{transition:background-color .25s ease,color .25s ease}
 .item-foto{margin:-16px -16px 2px;aspect-ratio:16/10;overflow:hidden;border-radius:14px 14px 0 0;background:var(--grelha-2)}
 .item-foto img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s ease}
 .item:hover .item-foto img{transform:scale(1.03)}
+
+.btn-esvaziar{align-self:flex-start;display:block;margin:-6px 0 14px auto;border:0;background:none;color:var(--texto-3);font-size:14px;font-weight:600;padding:6px 4px;text-decoration:underline;text-underline-offset:3px}
+.btn-esvaziar:hover{color:#e5677a}
+.btn-desistir{border:1px solid transparent;background:none;color:#e5677a;font-weight:700;border-radius:12px;padding:12px 16px}
+.btn-desistir:hover{border-color:#e5677a;background:rgba(229,103,122,.1)}
+:root[data-theme="light"] .btn-desistir,:root[data-theme="light"] .btn-esvaziar:hover{color:#B23A3A}
 </style>
 </head><body>
 
@@ -464,6 +470,7 @@ body{transition:background-color .25s ease,color .25s ease}
   <div class="acomp" id="acomp" hidden aria-live="polite"></div>
   <div id="area-pedido">
   <ul class="resumo-lista" id="resumo"></ul>
+  <button class="btn-esvaziar" id="btn-esvaziar" type="button">🗑 Esvaziar carrinho</button>
 
   <div class="obs" style="margin-bottom:14px">
     <div class="obs-titulo">⚠ Observação geral do pedido</div>
@@ -976,7 +983,7 @@ function renderAcomp(){
   }
 
   if(p.status==="cancelado"){
-    h += `<div class="alerta">${pg.status==="expirado" ? "O tempo para pagar o Pix acabou e o pedido foi cancelado. É só fazer de novo, rapidinho." : "Este pedido foi cancelado. Qualquer dúvida, fale com a gente pelo WhatsApp."}</div>`;
+    h += `<div class="alerta">${p.canceladoPor==="cliente" ? "Você desistiu deste pedido e ele foi cancelado. Nada foi cobrado." : pg.status==="expirado" ? "O tempo para pagar o Pix acabou e o pedido foi cancelado. É só fazer de novo, rapidinho." : "Este pedido foi cancelado. Qualquer dúvida, fale com a gente pelo WhatsApp."}</div>`;
   } else if(!esperandoPix){
     const passos = ent.modo==="Entrega" ? [["novo","Recebido"],["em_preparo","Na brasa"],["saiu","Saiu p/ entrega"],["concluido","Entregue"]] : [["novo","Recebido"],["em_preparo","Na brasa"],["pronto","Pronto"],["concluido","Retirado"]];
     const idx = passos.findIndex(x=>x[0]===p.status);
@@ -990,10 +997,11 @@ function renderAcomp(){
     <div class="rev-bloco"><div><small>Pagamento</small>${pagTxt}</div></div>
     <div class="rev-bloco"><div><small>Total</small><strong class="acomp-total">${brl(p.total)}</strong>${p.taxa?` <span style="color:var(--texto-3)">(inclui ${brl(p.taxa)} de entrega)</span>`:""}</div></div>
   </div>`;
-  h += `<div class="acoes">${finalStatus(p)?`<button class="btn-principal" id="acomp-novo" type="button">Fazer novo pedido</button>`:""}<button class="btn-sec" id="acomp-fechar" type="button">${finalStatus(p)?"Fechar":"Voltar ao cardápio"}</button></div>`;
+  h += `<div class="acoes">${finalStatus(p)?`<button class="btn-principal" id="acomp-novo" type="button">Fazer novo pedido</button>`:""}<button class="btn-sec" id="acomp-fechar" type="button">${finalStatus(p)?"Fechar":"Voltar ao cardápio"}</button>${p.podeDesistir?`<button class="btn-desistir" id="acomp-desistir" type="button">Desistir do pedido</button>`:""}</div>`;
 
   $("acomp").innerHTML = h;
   if($("pix-copiar")) $("pix-copiar").onclick = copiarPix;
+  if($("acomp-desistir")) $("acomp-desistir").onclick = desistir;
   if($("acomp-novo")) $("acomp-novo").onclick = ()=>{ encerrarAcomp(); voltarParaCardapio(); fecharTudo(); };
   $("acomp-fechar").onclick = ()=>{ if(finalStatus(p)){ encerrarAcomp(); voltarParaCardapio(); } fecharTudo(); };
   relogioPix();
@@ -1077,6 +1085,30 @@ function aplicarTema(t){
 }
 $("btn-tema").onclick = ()=>aplicarTema(document.documentElement.getAttribute("data-theme")==="light"?"dark":"light");
 aplicarTema(document.documentElement.getAttribute("data-theme")==="light"?"light":"dark");
+
+
+/* ===== Esvaziar carrinho e desistir do pedido ===== */
+function esvaziarCarrinho(){
+  if(!linhas().length) return;
+  if(!confirm("Esvaziar o carrinho? Todos os itens serão removidos.")) return;
+  Object.keys(carrinho).forEach(k=>delete carrinho[k]); combosNoPedido.length=0;
+  Object.keys(montagem).forEach(k=>delete montagem[k]);
+  $("obs-geral").value=""; renderCardapio(); atualizarBarra(); fecharTudo();
+}
+$("btn-esvaziar").onclick = esvaziarCarrinho;
+async function desistir(){
+  const p = acomp?.dados; if(!p) return;
+  const aviso = p.pagamento.forma==="Pix" && p.pagamento.status==="pendente" ? "\n\nO código Pix será cancelado. Não pague depois de desistir." : "";
+  if(!confirm(`Desistir do pedido #${p.codigo}?${aviso}`)) return;
+  const b=$("acomp-desistir"); b.disabled=true; b.textContent="Cancelando…";
+  try{
+    const r = await fetch(`/api/pedidos/${encodeURIComponent(acomp.id)}/cancelar?t=${encodeURIComponent(acomp.token)}`, {method:"POST"});
+    const d = await r.json().catch(()=>({}));
+    if(d.pedido) acomp.dados = d.pedido;
+    if(!r.ok) alert(d.erro || "Não foi possível cancelar agora. Tente de novo.");
+    renderAcomp(); atualizarBarraAcomp(); agendarPoll();
+  }catch(e){ alert("Sem conexão. Tente de novo."); b.disabled=false; b.textContent="Desistir do pedido"; }
+}
 
 /* Painéis */
 function abrir(id){ $("fundo").hidden=false; $(id).hidden=false; $("barra-acomp").hidden=true; if(id==="checkout"){ voltarParaCardapio(); etapaAtual=0; renderCheckout(); } }
