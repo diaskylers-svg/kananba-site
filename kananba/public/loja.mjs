@@ -33,8 +33,15 @@ export const CARDAPIO = [
   { id: "toscana",   grupo: "espetos", nome: "Linguiça toscana", curto: "Toscana", desc: "Linguiça suculenta, assada na hora.",  preco: 17, precoCompleto: 23, carne: false },
   { id: "calabresa", grupo: "espetos", nome: "Calabresa",  desc: "Calabresa defumada, tostadinha na brasa.", preco: 17, precoCompleto: 23, carne: false },
   { id: "baiao",     grupo: "acomp",   nome: "Baião",      desc: "Porção de baião de dois.",                preco: 9 },
+  { id: "arroz",     grupo: "acomp",   nome: "Arroz branco", desc: "Porção de arroz branco soltinho.",      preco: 10 },
   { id: "vinagrete", grupo: "acomp",   nome: "Vinagrete",  desc: "Porção de vinagrete fresquinho.",         preco: 5 },
-  { id: "farofa",    grupo: "acomp",   nome: "Farofa",     desc: "Porção de farofa da casa.",               preco: 7 }
+  { id: "farofa",    grupo: "acomp",   nome: "Farofa",     desc: "Porção de farofa da casa.",               preco: 7 },
+
+  // Bebidas — "opcoes" = sabores para o cliente escolher (o 1º já vem marcado)
+  { id: "refri-lata", grupo: "bebidas", nome: "Refrigerante lata",   desc: "Lata 350 ml, bem gelada.",   preco: 7,  opcoes: ["Coca-Cola", "Coca-Cola Zero", "Guaraná Antarctica", "Fanta Laranja"] },
+  { id: "refri-600",  grupo: "bebidas", nome: "Refrigerante 600 ml", desc: "Garrafa 600 ml, bem gelada.", preco: 10, opcoes: ["Coca-Cola", "Coca-Cola Zero", "Guaraná Antarctica", "Fanta Laranja"] },
+  { id: "refri-15",   grupo: "bebidas", nome: "Refrigerante 1,5 L",  desc: "Garrafa 1,5 L, pra dividir.", preco: 15, opcoes: ["Coca-Cola", "Coca-Cola Zero", "Guaraná Antarctica", "Fanta Laranja"] },
+  { id: "suco",       grupo: "bebidas", nome: "Suco",                desc: "Suco gelado.",                preco: 8,  opcoes: ["Laranja", "Uva", "Maracujá"] }
 ];
 
 // Combos: o cliente escolhe os sabores dos espetos (a soma tem que dar "espetos").
