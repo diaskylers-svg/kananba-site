@@ -481,6 +481,27 @@ body{transition:background-color .25s ease,color .25s ease}
 .sug-nome{font-size:13.5px;white-space:nowrap}
 .sug-nome small{display:inline;font-size:12px}
 .sug b{font-size:13px;white-space:nowrap}
+
+/* Totalizador do pedido */
+.totalizador{display:flex;flex-direction:column;gap:4px;margin:0 0 14px;padding:12px 14px;border-radius:14px;background:var(--grelha);border:1px solid var(--linha);font-variant-numeric:tabular-nums}
+.totalizador:empty{display:none}
+.totalizador div{display:flex;justify-content:space-between;color:var(--texto-2);font-size:15px}
+.totalizador .tot{margin-top:4px;padding-top:8px;border-top:1px solid var(--linha);color:var(--texto);font-family:var(--f-display);font-weight:900;font-size:28px;text-transform:uppercase}
+.totalizador .tot span:last-child{color:var(--brasa-forte)}
+
+/* Escolha de sabor a partir da sugestão */
+.sug.aberta{border-color:var(--brasa);background:var(--brasa-fundo)}
+.sug-escolha{margin-top:10px;padding:10px;border-radius:12px;background:var(--grelha);border:1px solid var(--brasa);animation:entra .2s ease}
+.sug-escolha-cab{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.sug-escolha-cab b{font-size:15px}
+.sug-fechar{border:0;background:none;color:var(--texto-3);font-size:16px;padding:2px 6px}
+.sug-tamanhos{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.sug-tamanhos .ponto{font-size:13px;padding:6px 10px}
+.sug-sabores{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}
+.sug-sabor{display:flex;flex-direction:column;align-items:flex-start;gap:2px;border:1px solid var(--linha);background:var(--grelha-2);border-radius:10px;padding:8px 10px;color:var(--texto);font:inherit;font-weight:700;font-size:14px;text-align:left}
+.sug-sabor span{font-size:12.5px;color:var(--brasa-forte)}
+.sug-sabor:hover{border-color:var(--brasa)}
+.sug-18{margin:8px 0 0;font-size:12.5px;color:var(--texto-3)}
 </style>
 </head><body>
 
@@ -581,6 +602,7 @@ body{transition:background-color .25s ease,color .25s ease}
   <div id="area-pedido">
   <ul class="resumo-lista" id="resumo"></ul>
   <button class="btn-esvaziar" id="btn-esvaziar" type="button">🗑 Esvaziar carrinho</button>
+  <div class="totalizador" id="totalizador"></div>
   <div class="sugestao" id="sugestao" hidden></div>
 
   <div class="obs" style="margin-bottom:14px">
@@ -865,10 +887,22 @@ function calc(){
   const taxa = pedido.entrega==="Entrega"?NEGOCIO.taxaEntrega:0;
   return {ls,sub,n,faltaPreco,taxa,total: sub+(taxa||0)};
 }
+function totalTxt(k){
+  const taxaNum = pedido.entrega==="Entrega" ? (NEGOCIO.taxaEntrega||0) : 0;
+  return { taxaNum, total: k.sub + taxaNum, aConfirmar: k.faltaPreco || (pedido.entrega==="Entrega" && NEGOCIO.taxaEntrega==null) };
+}
+function renderTotalizador(){
+  const k = calc(), t = totalTxt(k);
+  if(!k.n){ $("totalizador").innerHTML=""; return; }
+  $("totalizador").innerHTML = `<div><span>Itens (${k.n})</span><span>${k.faltaPreco?"a confirmar":brl(k.sub)}</span></div>
+    <div><span>${pedido.entrega==="Entrega"?"Taxa de entrega":"Retirada no local"}</span><span>${pedido.entrega==="Entrega"?(NEGOCIO.taxaEntrega==null?"a combinar":brl(NEGOCIO.taxaEntrega)):"grátis"}</span></div>
+    <div class="tot"><span>Total</span><span>${t.aConfirmar?"a confirmar":brl(t.total)}</span></div>`;
+}
 function atualizarBarra(){
-  const k = calc();
-  $("barra-qtd").textContent = k.n? `${k.n} ${k.n===1?"item":"itens"} no pedido` : "Nenhum item ainda";
-  $("barra-total").textContent = k.faltaPreco? "Total a confirmar" : brl(k.sub);
+  const k = calc(), t = totalTxt(k);
+  $("barra-qtd").textContent = k.n? `${k.n} ${k.n===1?"item":"itens"} · ${pedido.entrega==="Entrega"?(NEGOCIO.taxaEntrega?`com ${brl(NEGOCIO.taxaEntrega)} de entrega`:"entrega a combinar"):"retirada"}` : "Nenhum item ainda";
+  $("barra-total").textContent = !k.n ? brl(0) : t.aConfirmar ? "Total a confirmar" : brl(t.total);
+  if(!$("checkout").hidden && $("totalizador")) renderTotalizador();
   $("btn-revisar").disabled = !k.n;
 }
 
@@ -1027,40 +1061,55 @@ function renderPagamento(){
   atualizarWhats();
 }
 
+let sugBebida = null; // {sub, secao} quando o cliente toca numa bebida sugerida
+const NOME_SUB = {refris:"Refrigerante", sucos:"Suco", cervejas:"Cerveja"};
+function secoesDe(sub){
+  const out=[]; CARDAPIO.filter(i=>i.grupo==="bebidas" && i.sub===sub && i.preco!=null).forEach(i=>{ if(!out.some(o=>o.secao===i.secao)) out.push({secao:i.secao, preco:i.preco}); });
+  return out;
+}
+function rotuloTamanho(secao){ return secao.replace(/^(Refrigerante|Cerveja|Suco) ?/,"") || "Copo"; }
 function renderSugestao(){
   const ls = linhas();
   const temEspeto = ls.some(l=>l.it.grupo==="espetos" || l.combo);
   const temAcomp = ls.some(l=>l.it.grupo==="acomp" || l.completo || l.combo);
   const temBebida = ls.some(l=>l.it.grupo==="bebidas");
   const box = $("sugestao");
-  if(!temEspeto || (temAcomp && temBebida)){ box.hidden = true; return; }
-  const pega = (grupo, n) => {
-    const lista = CARDAPIO.filter(i=>i.grupo===grupo && !i.oculto && i.preco!=null && !carrinho[i.id]);
-    const top = DESTAQUES.ids[grupo]; lista.sort((a,b)=>(b.id===top)-(a.id===top));
-    return lista.slice(0,n);
-  };
-  // bebidas: uma de cada tipo (refri, suco e cerveja), começando pela mais pedida
-  const bebidas = () => {
-    const disp = CARDAPIO.filter(i=>i.grupo==="bebidas" && i.preco!=null && !carrinho[i.id]);
-    const top = disp.find(i=>i.id===DESTAQUES.ids.bebidas);
-    const ordem = ["refris","sucos","cervejas"];
-    const out = top ? [top] : [];
-    ordem.forEach(sub=>{ if(!out.some(o=>o.sub===sub)){ const x=disp.find(i=>i.sub===sub); if(x) out.push(x); } });
-    return out.slice(0,3);
-  };
-  const itens = [...(temAcomp?[]:pega("acomp",2)), ...(temBebida?[]:bebidas())];
-  if(!itens.length){ box.hidden = true; return; }
+  if(!temEspeto || (temAcomp && temBebida)){ box.hidden = true; sugBebida=null; return; }
+  const acomps = temAcomp ? [] : CARDAPIO.filter(i=>i.grupo==="acomp" && !i.oculto && i.preco!=null && !carrinho[i.id])
+      .sort((x,y)=>(y.id===DESTAQUES.ids.acomp)-(x.id===DESTAQUES.ids.acomp)).slice(0,2);
+  const topSub = CARDAPIO.find(i=>i.id===DESTAQUES.ids.bebidas)?.sub || "refris";
+  const subs = temBebida ? [] : ["refris","sucos","cervejas"].filter(sb=>secoesDe(sb).length).sort((x,y)=>(y===topSub)-(x===topSub));
+  if(!acomps.length && !subs.length){ box.hidden = true; return; }
   box.hidden = false;
-  box.innerHTML = `<div class="sug-titulo">${!temAcomp&&!temBebida?"Que tal acompanhar o espeto?":!temAcomp?"Faltou o acompanhamento?":"E pra beber?"}</div>
-    <div class="sug-lista">${itens.map(i=>`<button type="button" class="sug" data-sug="${i.id}"><span class="sug-nome">${i.grupo==="bebidas"?(i.sub==="sucos"?i.nome:`${i.nomeCurto} <small>${i.sub==="cervejas"?"lata":i.secao.replace(/^(Refrigerante|Cerveja) ?/,"").replace(" 350 ml","")}</small>`):i.nome}${DESTAQUES.ids[i.grupo]===i.id?' ⭐':''}</span><b>+ ${brl(i.preco)}</b></button>`).join("")}</div>`;
-  box.querySelectorAll("[data-sug]").forEach(b=>b.onclick=()=>{ mudar(b.dataset.sug, +1); renderCheckout(); });
+  let h = `<div class="sug-titulo">${!temAcomp&&!temBebida?"Que tal acompanhar o espeto?":!temAcomp?"Faltou o acompanhamento?":"E pra beber?"}</div><div class="sug-lista">`;
+  h += acomps.map(i=>`<button type="button" class="sug" data-sug="${i.id}"><span class="sug-nome">${i.nome}${DESTAQUES.ids.acomp===i.id?' ⭐':''}</span><b>+ ${brl(i.preco)}</b></button>`).join("");
+  h += subs.map(sb=>{ const sec=secoesDe(sb), min=Math.min(...sec.map(x=>x.preco));
+    return `<button type="button" class="sug${sugBebida?.sub===sb?" aberta":""}" data-sub-sug="${sb}" aria-expanded="${sugBebida?.sub===sb}"><span class="sug-nome">${NOME_SUB[sb]}${sb===topSub?' ⭐':''}</span><b>${sec.length>1?"a partir de ":"+ "}${brl(min)}</b></button>`; }).join("");
+  h += `</div>`;
+  if(sugBebida && subs.includes(sugBebida.sub)){
+    const sec = secoesDe(sugBebida.sub);
+    if(!sec.some(x=>x.secao===sugBebida.secao)) sugBebida.secao = sec[0].secao;
+    const sabores = CARDAPIO.filter(i=>i.grupo==="bebidas" && i.secao===sugBebida.secao && i.preco!=null);
+    h += `<div class="sug-escolha">
+      <div class="sug-escolha-cab"><b>${sugBebida.sub==="cervejas"?"Qual marca?":"Qual sabor?"}</b><button type="button" class="sug-fechar" data-fechar-sug aria-label="Fechar">✕</button></div>
+      ${sec.length>1?`<div class="sug-tamanhos">${sec.map(x=>`<button type="button" class="ponto" data-tam="${x.secao}" aria-pressed="${x.secao===sugBebida.secao}">${rotuloTamanho(x.secao)} · ${brl(x.preco)}</button>`).join("")}</div>`:""}
+      <div class="sug-sabores">${sabores.map(i=>`<button type="button" class="sug-sabor" data-sug="${i.id}">${i.nomeCurto}<span>+ ${brl(i.preco)}</span></button>`).join("")}</div>
+      ${sugBebida.sub==="cervejas"?`<p class="sug-18">🔞 Proibido para menores de 18 anos.</p>`:""}
+    </div>`;
+  }
+  box.innerHTML = h;
+  box.querySelectorAll("[data-sug]").forEach(b=>b.onclick=()=>{ mudar(b.dataset.sug, +1); sugBebida=null; renderCheckout(); });
+  box.querySelectorAll("[data-sub-sug]").forEach(b=>b.onclick=()=>{ const sb=b.dataset.subSug; sugBebida = sugBebida?.sub===sb ? null : {sub:sb, secao:secoesDe(sb)[0].secao}; renderSugestao(); });
+  box.querySelectorAll("[data-tam]").forEach(b=>b.onclick=()=>{ sugBebida.secao=b.dataset.tam; renderSugestao(); });
+  const f=box.querySelector("[data-fechar-sug]"); if(f) f.onclick=()=>{ sugBebida=null; renderSugestao(); };
 }
 function renderCheckout(){
   const k = calc();
   $("resumo").innerHTML = k.ls.map(l=>`<li><div class="r-linha"><span>${l.qtd}× ${l.nome}</span><span>${l.preco==null?"a definir":brl(l.preco*l.qtd)}</span></div>`+
     ((l.ponto||l.obs)?`<div class="r-obs">⚠ ${[l.ponto,l.obs].filter(Boolean).join(" · ")}</div>`:"")+`</li>`).join("");
   const ent = NEGOCIO.retirada?["Entrega","Retirada"]:["Entrega"];
-  opcoes($("op-entrega"), ent, pedido.entrega, v=>{pedido.entrega=v; renderCheckout();});
+  opcoes($("op-entrega"), ent, pedido.entrega, v=>{pedido.entrega=v; renderCheckout(); atualizarBarra();});
+  renderTotalizador();
   renderSugestao();
   $("op-entrega").hidden = ent.length<2;
   renderEtapas();
