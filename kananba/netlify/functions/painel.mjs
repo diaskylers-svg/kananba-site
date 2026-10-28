@@ -1,7 +1,8 @@
 // Bastidores: precisa da senha do painel (variável PAINEL_SENHA na Netlify)
 // GET  /api/painel/pedidos?dia=AAAA-MM-DD  → pedidos do dia
 // POST /api/painel/status {id, status}     → muda o status do pedido
-import { json, erro, senhaOk, diaDeTrabalho, listarDia, lerPedido, salvarPedido, conferirPix, marcar, mpConfigurado } from "../lib/comum.mjs";
+import { getStore } from "@netlify/blobs";
+import { CARDAPIO, COMBOS, json, erro, senhaOk, diaDeTrabalho, listarDia, lerPedido, salvarPedido, conferirPix, marcar, mpConfigurado } from "../lib/comum.mjs";
 
 const PROXIMOS = {
   novo: ["em_preparo", "cancelado"],
@@ -43,6 +44,28 @@ export default async (req, context) => {
   }
 
   if (req.method === "GET" && acao === "ping") return json({ ok: true, pixAtivo: mpConfigurado() });
+
+  /* ---- fotos do cardápio ---- */
+  if (req.method === "POST" && (acao === "foto" || acao === "foto-remover")) {
+    let b; try { b = await req.json(); } catch { return erro("Requisição inválida"); }
+    const valido = new Set([...CARDAPIO.map((c) => c.id), ...COMBOS.map((c) => c.id)]);
+    if (!valido.has(b.id)) return erro("Item do cardápio não encontrado.", 404);
+    const s = getStore({ name: "fotos", consistency: "strong" });
+    const indice = (await s.get("_indice", { type: "json" })) || {};
+    if (acao === "foto-remover") {
+      await s.delete(`img/${b.id}`);
+      delete indice[b.id];
+    } else {
+      const m = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(b.imagem || "");
+      if (!m) return erro("Formato de imagem inválido. Use JPG, PNG ou WEBP.");
+      const bytes = Buffer.from(m[2], "base64");
+      if (bytes.length > 2.5 * 1024 * 1024) return erro("Imagem muito grande (máximo 2,5 MB).", 413);
+      await s.set(`img/${b.id}`, bytes, { metadata: { tipo: m[1] } });
+      indice[b.id] = Date.now();
+    }
+    await s.setJSON("_indice", indice);
+    return json({ ok: true, fotos: indice });
+  }
 
   return erro("Não encontrado", 404);
 };
