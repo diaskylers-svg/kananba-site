@@ -34,14 +34,16 @@ export const CARDAPIO = [
   { id: "calabresa", grupo: "espetos", nome: "Calabresa",  desc: "Calabresa defumada, tostadinha na brasa.", preco: 17, precoCompleto: 23, carne: false },
   { id: "baiao",     grupo: "acomp",   nome: "Baião",      desc: "Porção de baião de dois.",                preco: 9 },
   { id: "arroz",     grupo: "acomp",   nome: "Arroz branco", desc: "Porção de arroz branco soltinho.",      preco: 10 },
-  { id: "vinagrete", grupo: "acomp",   nome: "Vinagrete",  desc: "Porção de vinagrete fresquinho.",         preco: 5 },
-  { id: "farofa",    grupo: "acomp",   nome: "Farofa",     desc: "Porção de farofa da casa.",               preco: 7 },
+  // oculto: true = não aparece sozinho no cardápio (só como adicional do Combo 2)
+  { id: "vinagrete", grupo: "acomp",   nome: "Vinagrete",  desc: "Porção de vinagrete fresquinho.",         preco: 5, oculto: true },
+  { id: "farofa",    grupo: "acomp",   nome: "Farofa",     desc: "Porção de farofa da casa.",               preco: 7, oculto: true },
 
-  // Bebidas — "opcoes" = sabores para o cliente escolher (o 1º já vem marcado)
-  { id: "refri-lata", grupo: "bebidas", nome: "Refrigerante lata",   desc: "Lata 350 ml, bem gelada.",   preco: 7,  opcoes: ["Coca-Cola", "Coca-Cola Zero", "Guaraná Antarctica", "Fanta Laranja"] },
-  { id: "refri-600",  grupo: "bebidas", nome: "Refrigerante 600 ml", desc: "Garrafa 600 ml, bem gelada.", preco: 10, opcoes: ["Coca-Cola", "Coca-Cola Zero", "Guaraná Antarctica", "Fanta Laranja"] },
-  { id: "refri-15",   grupo: "bebidas", nome: "Refrigerante 1,5 L",  desc: "Garrafa 1,5 L, pra dividir.", preco: 15, opcoes: ["Coca-Cola", "Coca-Cola Zero", "Guaraná Antarctica", "Fanta Laranja"] },
-  { id: "suco",       grupo: "bebidas", nome: "Suco",                desc: "Suco gelado.",                preco: 8,  opcoes: ["Laranja", "Uva", "Maracujá"] }
+  // Bebidas — sub = sub-tópico · opcoes = sabores/marcas (o 1º já vem marcado) · alcool = pede +18
+  { id: "cerveja",    grupo: "bebidas", sub: "cervejas", nome: "Cerveja lata",        desc: "Lata 350 ml, trincando de gelada.", preco: null, alcool: true, opcoes: ["Skol", "Brahma", "Itaipava"] }, // ⚠ falta o preço
+  { id: "refri-lata", grupo: "bebidas", sub: "refris",   nome: "Refrigerante lata",   desc: "Lata 350 ml, bem gelada.",    preco: 7,  opcoes: ["Coca-Cola", "Fanta Laranja", "Guaraná", "Pureza"] },
+  { id: "refri-600",  grupo: "bebidas", sub: "refris",   nome: "Refrigerante 600 ml", desc: "Garrafa 600 ml, bem gelada.", preco: 10, opcoes: ["Coca-Cola", "Fanta Laranja", "Guaraná", "Pureza"] },
+  { id: "refri-15",   grupo: "bebidas", sub: "refris",   nome: "Refrigerante 1,5 L",  desc: "Garrafa 1,5 L, pra dividir.", preco: 15, opcoes: ["Coca-Cola", "Fanta Laranja", "Guaraná", "Pureza"] },
+  { id: "suco",       grupo: "bebidas", sub: "sucos",    nome: "Suco",                desc: "Suco gelado.",                preco: 8,  opcoes: ["Goiaba", "Maracujá", "Manga"] }
 ];
 
 // Combos: o cliente escolhe os sabores dos espetos (a soma tem que dar "espetos").
@@ -51,3 +53,7 @@ export const COMBOS = [
   { id: "combo3", nome: "Combo 3 espetos + 2 baiões, 2 vinagretes e 1 farofa", desc: "Escolha os 3 sabores. Acompanha 2 porções de baião, 2 de vinagrete e 1 de farofa.", preco: 58.7, espetos: 3 },
   { id: "combo2", nome: "Combo 2 espetos + 1 baião", desc: "Escolha os 2 sabores. Acompanha 1 porção de baião.", preco: 41.5, espetos: 2, adicionais: ["vinagrete", "farofa"] }
 ];
+
+// Selos: enquanto não houver pedidos suficientes, o site mostra "Sugestão da casa" nestes itens.
+// Depois de alguns pedidos, troca sozinho para "Mais pedido" com base nas vendas reais.
+export const DESTAQUES_CASA = { combos: "combo3", espetos: "coxao", acomp: "baiao", bebidas: "refri-lata" };

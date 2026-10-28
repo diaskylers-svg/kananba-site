@@ -378,7 +378,7 @@ function cartao(p){
   return `<article class="card ${recentes.has(p.id)?"recente":""}" id="card-${p.id}">
     <div class="c-topo">
       <div><div class="c-cod">#${esc(p.codigo)}</div><div class="c-hora">${hora(p.criadoEm)} · há ${minutos<60?minutos+" min":Math.floor(minutos/60)+"h"+String(minutos%60).padStart(2,"0")}</div></div>
-      <div class="c-tags">${p.canceladoPor==="cliente"?`<span class="tag tag-cinza">Cliente desistiu</span>`:""}${tagPagamento(p)}<span class="tag tag-modo">${ent.modo==="Entrega"?"🛵 Entrega":"🏃 Retirada"}</span></div>
+      <div class="c-tags">${p.itens.some(i=>CARDAPIO.find(c=>c.id===i.id)?.alcool)?`<span class="tag tag-pendente">🔞 Conferir documento</span>`:""}${p.canceladoPor==="cliente"?`<span class="tag tag-cinza">Cliente desistiu</span>`:""}${tagPagamento(p)}<span class="tag tag-modo">${ent.modo==="Entrega"?"🛵 Entrega":"🏃 Retirada"}</span></div>
     </div>
     <ul class="itens">${p.itens.map(i => `<li><span class="q">${i.qtd}×</span><span class="i-nome">${esc(i.nome)}</span><span class="i-preco">${brl(i.total)}</span>${i.detalhe?`<span class="i-obs" style="color:var(--texto)">🍢 ${esc(i.detalhe)}</span>`:""}${i.ponto||i.obs?`<span class="i-obs">⚠ ${esc([i.ponto,i.obs].filter(Boolean).join(" · "))}</span>`:""}</li>`).join("")}</ul>
     ${p.obsGeral?`<div class="obs-geral">⚠ ${esc(p.obsGeral)}</div>`:""}

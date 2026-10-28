@@ -28,8 +28,29 @@ export async function lerPedido(id) {
 }
 export async function salvarPedido(p) {
   p.atualizadoEm = new Date().toISOString();
+  // conta para o ranking de "mais pedidos" uma única vez, quando o pedido vira válido (pago ou paga na entrega)
+  if (!p.contado && ["novo", "em_preparo", "saiu", "pronto", "concluido"].includes(p.status)) {
+    p.contado = true;
+    try { await somarRanking(p.itens); } catch (e) { console.error("ranking", e.message); }
+  }
   await loja().setJSON(chaveDe(p.id), p);
   return p;
+}
+
+/* ---------- ranking de mais pedidos ---------- */
+const lojaStats = () => getStore({ name: "stats", consistency: "strong" });
+export async function lerRanking() {
+  return (await lojaStats().get("ranking", { type: "json" })) || { pedidos: 0, itens: {} };
+}
+async function somarRanking(itens) {
+  const r = await lerRanking();
+  const somar = (id, n) => { r.itens[id] = (r.itens[id] || 0) + n; };
+  for (const i of itens) {
+    somar(i.id, i.qtd);
+    if (i.sabores) for (const [sid, n] of Object.entries(i.sabores)) somar(sid, n); // sabores do combo contam pros espetos
+  }
+  r.pedidos = (r.pedidos || 0) + 1;
+  await lojaStats().setJSON("ranking", r);
 }
 export async function listarDia(dia) {
   const s = loja();
