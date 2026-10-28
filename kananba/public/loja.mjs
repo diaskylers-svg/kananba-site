@@ -20,11 +20,18 @@ export const NEGOCIO = {
 };
 
 // preco = só o espeto · precoCompleto = Completinho (espeto + baião, vinagrete e farofa)
+// semCombo: true = não aparece para escolher nos combos
 export const CARDAPIO = [
   { id: "coxao",     grupo: "espetos", nome: "Coxão mole", desc: "Carne macia, temperada do jeito da casa.", preco: 17, precoCompleto: 23, carne: true },
+  { id: "alcatra",   grupo: "espetos", nome: "Alcatra",    desc: "Corte nobre, macio e suculento.",          preco: 23, precoCompleto: 29, carne: true, semCombo: true },
   { id: "paleta",    grupo: "espetos", nome: "Paleta",     desc: "Corte suculento, com sabor marcante.",    preco: 17, precoCompleto: 23, carne: true },
   { id: "misto",     grupo: "espetos", nome: "Misto",      desc: "Carne e frango intercalados.",            preco: 17, precoCompleto: 23, carne: true },
   { id: "frango",    grupo: "espetos", nome: "Frango",     desc: "Cubos de frango dourados na brasa.",      preco: 17, precoCompleto: 23, carne: false },
+  { id: "frangobacon", grupo: "espetos", nome: "Frango com bacon", curto: "Fr. bacon", desc: "Frango envolto em bacon, crocante na brasa.", preco: 17, precoCompleto: 23, carne: false },
+  { id: "coracao",   grupo: "espetos", nome: "Coração de frango", desc: "Coraçõezinhos temperados, no ponto certo.", preco: 17, precoCompleto: 23, carne: false, curto: "Coração" },
+  { id: "asa",       grupo: "espetos", nome: "Asas de frango", desc: "Asinhas temperadas, douradas na brasa.",  preco: 17, precoCompleto: 23, carne: false },
+  { id: "toscana",   grupo: "espetos", nome: "Linguiça toscana", curto: "Toscana", desc: "Linguiça suculenta, assada na hora.",  preco: 17, precoCompleto: 23, carne: false },
+  { id: "calabresa", grupo: "espetos", nome: "Calabresa",  desc: "Calabresa defumada, tostadinha na brasa.", preco: 17, precoCompleto: 23, carne: false },
   { id: "baiao",     grupo: "acomp",   nome: "Baião",      desc: "Porção de baião de dois.",                preco: 9 },
   { id: "vinagrete", grupo: "acomp",   nome: "Vinagrete",  desc: "Porção de vinagrete fresquinho.",         preco: 5 },
   { id: "farofa",    grupo: "acomp",   nome: "Farofa",     desc: "Porção de farofa da casa.",               preco: 7 }
