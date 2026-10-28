@@ -388,6 +388,11 @@ body{transition:background-color .25s ease,color .25s ease}
 .topo>.btn-tema{position:absolute;z-index:3;top:12px;left:12px;display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#e7eaf1;border-radius:999px;padding:7px 12px 7px 9px;font-size:13px;font-weight:600;backdrop-filter:blur(6px)}
 .topo>.btn-tema:hover{border-color:#fff;background:rgba(255,255,255,.16)}
 .btn-tema svg{width:18px;height:18px;flex:none}
+
+/* fotos dos itens (enviadas pelo painel) */
+.item-foto{margin:-16px -16px 2px;aspect-ratio:16/10;overflow:hidden;border-radius:14px 14px 0 0;background:var(--grelha-2)}
+.item-foto img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s ease}
+.item:hover .item-foto img{transform:scale(1.03)}
 </style>
 </head><body>
 
@@ -552,8 +557,14 @@ const pedido = {entrega:"Entrega", pag:null};
 const $ = id => document.getElementById(id);
 
 function svgEspeto(cor){
+  const CORES = {coxao:['#a0461c'], alcatra:['#8a3418'], paleta:['#6e2a10'], misto:['#a0461c','#e8b26a'], frango:['#e8b26a'],
+    frangobacon:['#e8b26a','#b8452e'], asa:['#d98a3a'], coracao:['#7a1e1a'], toscana:['#c46a45'], calabresa:['#8e2a1f']};
+  const c = CORES[cor] || CORES.coxao;
+  const redondo = cor==="toscana"||cor==="calabresa"||cor==="coracao";
   return `<svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><line x1="4" y1="30" x2="30" y2="4" stroke="#b9aa9c" stroke-width="2" stroke-linecap="round"/>`+
-  [0,1,2,3].map(i=>{const c=8+i*5.2;return `<rect x="${c-3.5}" y="${34-c-3.5-3}" width="8" height="8" rx="2" fill="${i%2&&cor==='misto'?'#e8b26a':cor==='frango'?'#e8b26a':cor==='paleta'?'#6e2a10':'#a0461c'}" transform="rotate(-45 ${c} ${34-c-3})"/>`}).join("")+`</svg>`;
+  [0,1,2,3].map(i=>{const k=8+i*5.2, f=c[i%c.length];
+    return redondo ? `<circle cx="${k+0.5}" cy="${34-k-2.5}" r="4.2" fill="${f}"/><circle cx="${k-0.6}" cy="${34-k-3.6}" r="1.3" fill="rgba(255,255,255,.25)"/>`
+                   : `<rect x="${k-3.5}" y="${34-k-3.5-3}" width="8" height="8" rx="${cor==="asa"?4:2}" fill="${f}" transform="rotate(-45 ${k} ${34-k-3})"/>`}).join("")+`</svg>`;
 }
 function svgPote(){return `<svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M5 15h24l-2.5 11a3 3 0 0 1-3 2.3H10.5a3 3 0 0 1-3-2.3z" fill="#7a5a3a"/><ellipse cx="17" cy="15" rx="12" ry="3.5" fill="#e8c27a"/><circle cx="12" cy="13.5" r="1.5" fill="#c0392b"/><circle cx="20" cy="14" r="1.4" fill="#4cc38a"/></svg>`}
 
@@ -592,9 +603,9 @@ function renderItem(it){
         <div class="variante${comp?" on":""}"><div><b>Completinho 🔥</b><span class="v-preco">${brl(it.precoCompleto)}</span><small>${NEGOCIO.completinhoDesc}</small></div>${ctrl(comp," data-comp","")}</div>
       </div>`
     : `<div class="item-acao">${qtd?`${ctrl(qtd,"","")}<span style="color:var(--texto-2);font-size:14px">${brl(it.preco*qtd)}</span>`:`<span></span>${ctrl(0,"","")}`}</div>`;
-  el.innerHTML = `
+  el.innerHTML = `${fotoHtml(it)}
     <div class="item-topo">
-      <div class="espeto-ico">${it.grupo==="espetos"?svgEspeto(it.id):svgPote()}</div>
+      ${FOTOS[it.id]?"":`<div class="espeto-ico">${it.grupo==="espetos"?svgEspeto(it.id):svgPote()}</div>`}
       <div class="item-txt"><h3 class="item-nome">${it.nome}</h3><p class="item-desc">${it.desc}${it.grupo==="espetos"?" 8 cubos.":""}</p></div>
       ${it.precoCompleto!=null?`<span class="preco"><small class="a-partir">a partir de</small>${brl(it.preco)}</span>`:precoTxt(it.preco)}
     </div>
@@ -630,18 +641,18 @@ function renderCombo(cb){
   const escolhidos = Object.values(m.sabores).reduce((a,b)=>a+b,0);
   const falta = cb.espetos - escolhidos;
   const noPedido = combosNoPedido.filter(c=>c.id===cb.id);
-  const espetos = CARDAPIO.filter(i=>i.grupo==="espetos");
+  const espetos = CARDAPIO.filter(i=>i.grupo==="espetos" && !i.semCombo);
   const el = document.createElement("article");
   el.className = "item combo"+(noPedido.length?" ativo":""); el.id = "combo-"+cb.id;
-  el.innerHTML = `
+  el.innerHTML = `${fotoHtml(cb)}
     <div class="item-topo">
-      <div class="espeto-ico">${svgEspeto("coxao")}</div>
+      ${FOTOS[cb.id]?"":`<div class="espeto-ico">${svgEspeto("coxao")}</div>`}
       <div class="item-txt"><h3 class="item-nome">${cb.nome}</h3><p class="item-desc">${cb.desc}</p></div>
       <span class="preco">${brl(cb.preco)}</span>
     </div>
     <div class="sabores">
       <div class="sabores-cab"><b>Escolha ${cb.espetos} espetos</b><span class="${falta?"":"ok"}">${falta?`faltam ${falta}`:"pronto ✓"}</span></div>
-      <div class="slots" aria-label="${escolhidos} de ${cb.espetos} espetos escolhidos">${(()=>{const lista=[]; espetos.forEach(e=>{for(let k=0;k<(m.sabores[e.id]||0);k++) lista.push(e);}); return Array.from({length:cb.espetos},(_,k)=>lista[k]?`<div class="slot cheio"><span class="slot-ico">${svgEspeto(lista[k].id)}</span><small>${lista[k].nome.split(" ")[0]}</small></div>`:`<div class="slot"><span class="slot-num">${k+1}</span><small>escolha</small></div>`).join("");})()}</div>
+      <div class="slots" aria-label="${escolhidos} de ${cb.espetos} espetos escolhidos">${(()=>{const lista=[]; espetos.forEach(e=>{for(let k=0;k<(m.sabores[e.id]||0);k++) lista.push(e);}); return Array.from({length:cb.espetos},(_,k)=>lista[k]?`<div class="slot cheio"><span class="slot-ico">${svgEspeto(lista[k].id)}</span><small>${lista[k].curto||lista[k].nome.split(" ")[0]}</small></div>`:`<div class="slot"><span class="slot-num">${k+1}</span><small>escolha</small></div>`).join("");})()}</div>
       ${espetos.map(e=>{const n=m.sabores[e.id]||0; return `<div class="sabor${n?" on":""}"><span class="sabor-nome"><span class="sabor-ico">${svgEspeto(e.id)}</span>${e.nome}</span><div class="qtd"><button type="button" data-s-menos="${e.id}" aria-label="Tirar ${e.nome}" ${n?"":"disabled"}>−</button><span>${n}</span><button type="button" data-s-mais="${e.id}" aria-label="Mais ${e.nome}" ${falta?"":"disabled"}>+</button></div></div>`}).join("")}
       ${extrasOpc.length?`<div class="extras"><b>Quer incluir? <span>(opcional)</span></b><div class="pontos">${extrasOpc.map(x=>`<button type="button" class="ponto" data-extra="${x.id}" aria-pressed="${m.extras.includes(x.id)}">+ ${x.nome} ${brl(x.preco)}</button>`).join("")}</div></div>`:""}
       <textarea id="combo-obs-${cb.id}" placeholder="Como você quer? Ex.: coxão ao ponto, frango bem douradinho, sem sal grosso…">${m.obs||""}</textarea>
@@ -665,6 +676,11 @@ function renderCombo(cb){
 function descExtras(ex){ return ex.map(id=>"+ "+(CARDAPIO.find(i=>i.id===id)?.nome||id)).join(", "); }
 function descSabores(sab){ return Object.entries(sab).map(([id,n])=>`${n}× ${CARDAPIO.find(i=>i.id===id)?.nome||id}`).join(", "); }
 function redesenharCombo(cb){ const v=$("combo-"+cb.id); const foco=document.activeElement&&document.activeElement.tagName==="TEXTAREA"&&v.contains(document.activeElement); const n=renderCombo(cb); v.replaceWith(n); if(foco){const t=n.querySelector("textarea"); t.focus(); t.setSelectionRange(t.value.length,t.value.length);} }
+let FOTOS = {};
+function fotoHtml(it){ return FOTOS[it.id] ? `<div class="item-foto"><img src="/api/foto/${it.id}?v=${FOTOS[it.id]}" alt="${it.nome}" loading="lazy" decoding="async"></div>` : ""; }
+async function carregarFotos(){
+  try{ const r = await fetch("/api/fotos"); if(!r.ok) return; FOTOS = (await r.json()).fotos || {}; if(Object.keys(FOTOS).length) renderCardapio(); }catch(e){}
+}
 function renderCardapio(){
   $("grade-combos").innerHTML=""; COMBOS.forEach(cb=>$("grade-combos").appendChild(renderCombo(cb)));
   $("grade-espetos").innerHTML=""; $("grade-acomp").innerHTML="";
@@ -1136,7 +1152,7 @@ $("fab").onclick = ()=>{
   }catch(e){}
 })();
 
-renderInfo(); renderCardapio(); atualizarBarra();
+renderInfo(); renderCardapio(); atualizarBarra(); carregarFotos();
 $("btn-sugestao").href = linkWhats("Olá, KANANBA! Tenho uma sugestão: ");
 
 /* Chamas de verdade no "caramba" */
