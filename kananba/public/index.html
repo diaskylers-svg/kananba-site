@@ -53,12 +53,18 @@ button{cursor:pointer}
 .icone-btn svg{width:22px;height:22px}
 .loja h1{font-family:var(--f-display);font-weight:900;font-size:30px;letter-spacing:.04em;margin:4px 0 0;line-height:1;text-transform:uppercase}
 .slogan{color:var(--texto-2);margin:4px 0 14px;font-size:15px}
-.status{margin:0 -18px;padding:10px 16px;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}
-.status.aberto{background:rgba(76,175,80,.14);color:var(--ok)}
-.status.fechado{background:var(--aviso-fundo);color:var(--aviso)}
-.status .ponto{width:8px;height:8px;border-radius:50%;background:currentColor}
-.status.aberto .ponto{animation:pulsa 1.6s infinite}
-@keyframes pulsa{50%{opacity:.25}}
+.status{margin:0 -18px;padding:10px 16px;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.status.aberto{background:#0f2a16;color:#bfe8c6;border-block:1px solid #1d4a27}
+.status.fechado{background:#2a1c0b;color:#f3d9a8;border-block:1px solid #4a3212}
+.neon{font-family:var(--f-display);font-weight:900;font-size:19px;letter-spacing:.16em;padding:.12em .5em .08em .66em;border:2px solid;border-radius:10px;line-height:1.1}
+.status.aberto .neon{animation:neon 2.4s infinite}
+.status.fechado .neon{animation:fechado 1.6s infinite}
+@keyframes neon{0%,46%{color:#fff;border-color:#fff;text-shadow:0 0 4px #fff,0 0 12px rgba(255,255,255,.7);box-shadow:0 0 10px rgba(255,255,255,.4),inset 0 0 8px rgba(255,255,255,.25)}
+  50%,96%{color:#8dffa0;border-color:#5cff7a;text-shadow:0 0 3px #5cff7a,0 0 10px #4cff6e,0 0 20px rgba(76,255,110,.7);box-shadow:0 0 14px rgba(76,255,110,.6),inset 0 0 10px rgba(76,255,110,.35)}
+  48%,98%{opacity:.6}}
+@keyframes fechado{0%,46%{color:#ffd23f;border-color:#ffd23f;text-shadow:0 0 4px #ffd23f,0 0 12px rgba(255,210,63,.7);box-shadow:0 0 10px rgba(255,210,63,.45)}
+  50%,96%{color:#ff3b3b;border-color:#ff3b3b;text-shadow:0 0 4px #ff3b3b,0 0 12px rgba(255,59,59,.7);box-shadow:0 0 10px rgba(255,59,59,.45)}
+  48%,98%{opacity:.6}}
 .mais-info{display:block;width:100%;border:0;background:none;padding:14px 0 16px;font-weight:700;font-size:15px}
 .info-painel{text-align:left;border-top:1px solid var(--linha);padding:14px 0 18px;display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .info-item{display:flex;gap:10px;align-items:flex-start;font-size:15px;color:var(--texto-2)}
@@ -230,6 +236,15 @@ label.opcao{cursor:pointer}
 .fila small{display:block;color:var(--texto-2)}
 .rev{display:grid;gap:10px;font-size:15px}
 .rev small{display:block;color:var(--texto-3);font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+.stepper{display:flex;gap:6px;margin:-4px 0 0}
+.stepper button{flex:1;border:0;background:none;padding:0;display:grid;gap:6px;justify-items:center;font-size:13px;font-weight:700;color:var(--texto-3)}
+.stepper button:disabled{cursor:default}
+.stepper .bola{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--linha);background:var(--grelha-2)}
+.stepper .atual{color:var(--brasa-forte)} .stepper .atual .bola{border-color:var(--brasa);color:var(--brasa-forte)}
+.stepper .feito{color:var(--texto-2)} .stepper .feito .bola{background:var(--brasa);border-color:var(--brasa);color:var(--sobre-brasa)}
+.prog{height:4px;border-radius:4px;background:var(--linha);overflow:hidden}.prog i{display:block;height:100%;background:var(--brasa);transition:width .25s}
+.resumo-etapa{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;background:var(--grelha-2);border-radius:12px;padding:10px 12px;font-size:14.5px}
+.resumo-etapa small{display:block;color:var(--texto-3);font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:700}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 90px);z-index:60;background:var(--texto);color:var(--grelha);padding:10px 16px;border-radius:12px;font-weight:700;font-size:15px;box-shadow:var(--sombra);max-width:calc(100% - 32px)}
 </style></head><body>
 
@@ -245,7 +260,7 @@ label.opcao{cursor:pointer}
       </div>
       <h1>KANANBA Espetos</h1>
       <p class="slogan">Espetos do KANANBA · 8 cubos em cada espeto</p>
-      <div class="status" id="status"><span class="ponto"></span><span id="status-txt"></span></div>
+      <div class="status" id="status"><span class="neon" id="neon">ABERTO</span><span id="status-txt"></span></div>
       <button class="mais-info" id="b-info" type="button" aria-expanded="false" aria-controls="info">Mais informações</button>
       <div class="info-painel" id="info" hidden>
         <div class="info-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div><b>Horário</b>Todos os dias, <span id="info-hora"></span></div></div>
@@ -377,7 +392,8 @@ function aberto(){ try{ const m=minutosSP(); return NEGOCIO.abre>NEGOCIO.fecha ?
 function pintarStatus(){
   const ab = aberto();
   $("status").className = "status "+(ab?"aberto":"fechado");
-  $("status-txt").textContent = ab ? `Aberto agora · pedidos até ${hm(NEGOCIO.fecha)}` : `Loja fechada, abre hoje às ${hm(NEGOCIO.abre)}`;
+  $("neon").textContent = ab ? "ABERTO" : "FECHADO";
+  $("status-txt").textContent = ab ? `Pedidos até ${hm(NEGOCIO.fecha)}` : `Abrimos hoje às ${hm(NEGOCIO.abre)}`;
 }
 
 /* ============ sacola ============ */
@@ -553,7 +569,7 @@ function abrirSacola(){
   $("p-corpo").querySelectorAll("[data-rem]").forEach(b=>b.onclick=()=>{ og(); sacola=sacola.filter(l=>l.key!==b.dataset.rem); salvarSacola(); abrirSacola(); });
   $("p-corpo").querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{ og(); const l=sacola.find(x=>x.key===b.dataset.edit); l.combo?abrirCombo(l.id,l):abrirItem(l.id,l); });
   $("sac-mais").onclick=()=>{ og(); fecharPainel(); };
-  $("sac-cont").onclick=()=>{ og(); abrirCheckout(); };
+  $("sac-cont").onclick=()=>{ og(); abrirCheckout(null,0); };
 }
 
 /* --- finalizar --- */
@@ -577,45 +593,59 @@ function previsaoTxt(){
   const p = cli.modo==="Entrega"?FILA.entrega:FILA.retirada; if(!p) return "";
   return `${cli.modo==="Entrega"?"Chega em":"Fica pronto em"} ${p.min}–${p.max} min${FILA.naFila?` · ${FILA.naFila} pedido${FILA.naFila>1?"s":""} na fila`:""}`;
 }
-function abrirCheckout(erroMsg){
+const ETAPAS=["Seus dados","Entrega","Pagamento"];
+let ckEtapa=0;
+function rotEtapas(){ return ["Seus dados", cli.modo==="Entrega"?"Entrega":"Retirada", "Pagamento"]; }
+function abrirCheckout(erroMsg, etapa){
+  if(etapa!=null) ckEtapa=etapa;
   carregarFila();
   const taxa = cli.modo==="Entrega" ? (NEGOCIO.taxaEntrega??0) : 0, sub=totalSacola();
-  const c = `
-    ${!aberto()?`<div class="aviso">A loja está fechada agora. Abrimos às ${hm(NEGOCIO.abre)}: seu pedido entra na fila e começa a ser preparado quando a gente abrir.</div>`:""}
-    <div class="grupo"><div class="grupo-cab"><div><b>Seus dados</b><small>Pra gente saber de quem é o pedido</small></div></div>
-      <div class="campos">${campo("f-nome","Nome",cli.nome,'autocomplete="name" data-req',"l2")}
-      <label class="campo">CPF<input id="f-cpf" inputmode="numeric" value="${esc(cli.cpf)}" placeholder="000.000.000-00" data-req><span class="dica" id="cpf-dica"></span></label>
-      ${campo("f-tel","Celular com DDD",cli.tel,'type="tel" inputmode="tel" autocomplete="tel" placeholder="(48) 9 0000-0000" data-req')}
-      <label class="check l2" style="grid-column:1/-1"><input type="checkbox" id="f-whats" ${cli.telWhats?"checked":""}> Esse número tem WhatsApp</label></div></div>
-    <div class="grupo"><div class="grupo-cab"><div><b>Como quer receber?</b></div></div>
+  const libera = i => { for(let k=0;k<i;k++) if(faltaEtapa(k).length) return false; return true; };
+  const rots=rotEtapas();
+  const stepper = `<div class="stepper">${rots.map((r,i)=>`<button type="button" data-etapa="${i}" class="${i<ckEtapa?"feito":i===ckEtapa?"atual":""}" ${i!==ckEtapa&&!libera(i)?"disabled":""} ${i===ckEtapa?'aria-current="step"':""}><span class="bola">${i<ckEtapa?"✓":i+1}</span>${r}</button>`).join("")}</div>
+    <div class="prog"><i style="width:${(ckEtapa/2)*100}%"></i></div>`;
+  let c = stepper + (!aberto()?`<div class="aviso">A loja está fechada agora. Abrimos às ${hm(NEGOCIO.abre)}: seu pedido entra na fila e começa a ser preparado quando a gente abrir.</div>`:"");
+  if(ckEtapa===0){
+    c += `<div class="grupo"><div class="grupo-cab"><div><b>Seus dados</b><small>Pra gente saber de quem é o pedido</small></div></div>
+      <div class="campos">${campo("f-nome","Nome",cli.nome,'autocomplete="name"',"l2")}
+      <label class="campo">CPF<input id="f-cpf" inputmode="numeric" value="${esc(cli.cpf)}" placeholder="000.000.000-00"><span class="dica" id="cpf-dica"></span></label>
+      ${campo("f-tel","Celular com DDD",cli.tel,'type="tel" inputmode="tel" autocomplete="tel" placeholder="(48) 9 0000-0000"')}
+      <label class="check" style="grid-column:1/-1"><input type="checkbox" id="f-whats" ${cli.telWhats?"checked":""}> Esse número tem WhatsApp</label></div></div>`;
+  } else if(ckEtapa===1){
+    c += `<div class="grupo"><div class="grupo-cab"><div><b>Como quer receber?</b></div></div>
       <div class="segmento"><button type="button" data-modo="Entrega" aria-pressed="${cli.modo==="Entrega"}">Entrega</button>${NEGOCIO.retirada?`<button type="button" data-modo="Retirada" aria-pressed="${cli.modo==="Retirada"}">Retirar no local</button>`:""}</div>
       ${cli.modo==="Entrega"?`<div class="campos" style="margin-top:10px">
         <label class="campo l2">CEP<input id="f-cep" inputmode="numeric" value="${esc(cli.cep)}" placeholder="00000-000"><span class="dica" id="cep-dica">Digite o CEP que a gente preenche a rua e o bairro.</span></label>
-        ${campo("f-rua","Rua",cli.rua,'autocomplete="address-line1" data-req',"l2")}
-        <label class="campo">Número<input id="f-num" inputmode="numeric" value="${esc(cli.semNumero?"":cli.numero)}" ${cli.semNumero?"disabled":""} data-req><span class="check"><input type="checkbox" id="f-semnum" ${cli.semNumero?"checked":""}> Sem número</span></label>
+        ${campo("f-rua","Rua",cli.rua,'autocomplete="address-line1"',"l2")}
+        <label class="campo">Número<input id="f-num" inputmode="numeric" value="${esc(cli.semNumero?"":cli.numero)}" ${cli.semNumero?"disabled":""}><span class="check"><input type="checkbox" id="f-semnum" ${cli.semNumero?"checked":""}> Sem número</span></label>
         ${campo("f-comp","Complemento",cli.complemento,'placeholder="Apto, bloco…"')}
-        ${campo("f-bairro","Bairro",cli.bairro,"data-req")}
+        ${campo("f-bairro","Bairro",cli.bairro,"")}
         ${campo("f-cidade","Cidade",cli.cidade,"")}
         ${campo("f-ref","Ponto de referência",cli.referencia,'placeholder="Ex.: perto do mercado"',"l2")}
-      </div>`:`<p class="secao-nota" style="margin:8px 0 0">Sem taxa de entrega. Avisamos quando ficar pronto.</p>`}
-    </div>
-    <div class="grupo"><div class="grupo-cab"><div><b>Pagamento</b><small>Escolha 1 opção</small></div><span class="obrig ${cli.pag?"ok":""}">Obrigatório</span></div>
+      </div>`:`<p class="secao-nota" style="margin:8px 0 0">Sem taxa de entrega. Avisamos quando ficar pronto.</p>`}</div>
+      ${previsaoTxt()?`<div class="fila"><span>⏱️</span><div><b id="prev-txt">${esc(previsaoTxt())}</b><small>Preparamos um pedido por vez, na ordem de chegada.</small></div></div>`:""}`;
+  } else {
+    const endTxt = cli.modo==="Entrega" ? `${cli.rua}, ${cli.semNumero?"s/n":cli.numero}${cli.complemento?" — "+cli.complemento:""} · ${cli.bairro}` : "Retirada no local";
+    c += `<div class="resumo-etapa"><div><small>Seus dados</small>${esc(cli.nome)} · ${esc(cli.tel)}</div><button class="lk lk-edit" type="button" data-etapa="0">Alterar</button></div>
+      <div class="resumo-etapa"><div><small>${cli.modo==="Entrega"?"Entrega em":"Recebimento"}</small>${esc(endTxt)}</div><button class="lk lk-edit" type="button" data-etapa="1">Alterar</button></div>
+      <div class="grupo"><div class="grupo-cab"><div><b>Pagamento</b><small>Escolha 1 opção</small></div><span class="obrig ${cli.pag?"ok":""}">Obrigatório</span></div>
       ${NEGOCIO.pagamentos.map(p=>`<label class="opcao"><input type="radio" name="pag" value="${esc(p)}" ${cli.pag===p?"checked":""}><span class="o-txt">${esc(p)}${p==="Pix"?"<small>Pague agora pelo site, com QR Code ou Copia e Cola</small>":`<small>Paga na ${cli.modo==="Entrega"?"entrega":"retirada"}</small>`}</span></label>`).join("")}
-      ${cli.pag==="Dinheiro"?campo("f-troco","Troco para quanto? (opcional)",cli.troco,'inputmode="decimal" placeholder="Ex.: 100"'):""}
-    </div>
-    ${previsaoTxt()?`<div class="fila"><span>⏱️</span><div><b id="prev-txt">${esc(previsaoTxt())}</b><small>Preparamos um pedido por vez, na ordem de chegada.</small></div></div>`:""}
-    <div class="totais"><div><span>Subtotal</span><span>${brl(sub)}</span></div><div><span>Taxa de entrega</span><span>${cli.modo==="Entrega"?(NEGOCIO.taxaEntrega==null?"a combinar":brl(taxa)):"Grátis"}</span></div><div class="t-final"><span>Total</span><span class="preco">${brl(sub+taxa)}</span></div></div>
-    ${erroMsg?`<div class="erro" id="f-erro">${esc(erroMsg)}</div>`:""}`;
-  abrirPainel("Finalizar pedido", c, `<button class="btn btn-s" type="button" id="ck-voltar">Voltar</button><button class="btn btn-p" type="button" id="ck-enviar">${cli.pag==="Pix"?"Gerar Pix":"Fazer pedido"} <span class="preco">${brl(sub+taxa)}</span></button>`);
+      ${cli.pag==="Dinheiro"?campo("f-troco","Troco para quanto? (opcional)",cli.troco,'inputmode="decimal" placeholder="Ex.: 100"'):""}</div>
+      <div class="totais"><div><span>Subtotal</span><span>${brl(sub)}</span></div><div><span>Taxa de entrega</span><span>${cli.modo==="Entrega"?(NEGOCIO.taxaEntrega==null?"a combinar":brl(taxa)):"Grátis"}</span></div><div class="t-final"><span>Total</span><span class="preco">${brl(sub+taxa)}</span></div></div>`;
+  }
+  if(erroMsg) c += `<div class="erro" id="f-erro">${esc(erroMsg)}</div>`;
+  const final = ckEtapa===2;
+  abrirPainel("Finalizar pedido", c, `<button class="btn btn-s" type="button" id="ck-voltar">Voltar</button><button class="btn btn-p" type="button" id="ck-enviar">${final?(cli.pag==="Pix"?"Gerar Pix":"Fazer pedido")+` <span class="preco">${brl(sub+taxa)}</span>`:ckEtapa===1?"Ir para o pagamento":"Continuar"}</button>`);
   if(erroMsg) setTimeout(()=>$("f-erro")?.scrollIntoView({block:"center",behavior:"smooth"}),50);
   const repinta=()=>{ lerForm(); guardarCliente(); manterRolagem(()=>abrirCheckout()); };
+  $("p-corpo").querySelectorAll("[data-etapa]").forEach(b=>b.onclick=()=>{ lerForm(); guardarCliente(); const i=+b.dataset.etapa; if(i>ckEtapa && !libera(i)) return; abrirCheckout(null,i); });
   $("p-corpo").querySelectorAll("[data-modo]").forEach(b=>b.onclick=()=>{ lerForm(); cli.modo=b.dataset.modo; repinta(); });
   $("p-corpo").querySelectorAll("input[name=pag]").forEach(r=>r.onchange=()=>{ lerForm(); cli.pag=r.value; repinta(); });
-  $("f-cpf").oninput=e=>{ e.target.value=mascCPF(e.target.value); const d=$("cpf-dica"), n=so(e.target.value).length; e.target.classList.remove("invalido");
+  $("p-corpo").querySelectorAll("input").forEach(i=>{ i.addEventListener("input",()=>i.classList.remove("invalido")); if(i.type!=="checkbox"&&i.type!=="radio") i.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); if(!final) avancar(); } }); });
+  if($("f-cpf")){ $("f-cpf").oninput=e=>{ e.target.value=mascCPF(e.target.value); const d=$("cpf-dica"), n=so(e.target.value).length; e.target.classList.remove("invalido");
     if(n<11){ d.textContent=""; d.className="dica"; } else if(cpfValido(e.target.value)){ d.textContent="CPF válido ✓"; d.className="dica ok"; } else { d.textContent="Esse CPF não parece correto."; d.className="dica erro"; } };
-  $("f-cpf").dispatchEvent(new Event("input"));
-  $("f-tel").oninput=e=>{ e.target.value=mascTel(e.target.value); e.target.classList.remove("invalido"); };
-  $("p-corpo").querySelectorAll("input").forEach(i=>i.addEventListener("input",()=>i.classList.remove("invalido")));
+    $("f-cpf").dispatchEvent(new Event("input")); }
+  if($("f-tel")) $("f-tel").oninput=e=>{ e.target.value=mascTel(e.target.value); e.target.classList.remove("invalido"); };
   if($("f-semnum")) $("f-semnum").onchange=e=>{ $("f-num").disabled=e.target.checked; if(e.target.checked) $("f-num").value=""; };
   if($("f-cep")){ let ult=""; $("f-cep").oninput=async e=>{
     e.target.value=mascCEP(e.target.value); const cep=so(e.target.value), d=$("cep-dica");
@@ -625,27 +655,32 @@ function abrirCheckout(erroMsg){
       if(j.logradouro) $("f-rua").value=j.logradouro; if(j.bairro) $("f-bairro").value=j.bairro; if(j.localidade) $("f-cidade").value=j.localidade+(j.uf?" - "+j.uf:"");
       d.textContent="Endereço encontrado ✓ Agora é só o número."; d.className="dica ok"; $("f-num").focus();
     }catch(err){ d.textContent="Não deu para buscar o CEP agora. Preencha abaixo."; d.className="dica erro"; } }; }
-  $("ck-voltar").onclick=()=>{ lerForm(); guardarCliente(); abrirSacola(); };
-  $("ck-enviar").onclick=enviarPedido;
+  if(!erroMsg && matchMedia("(hover:hover)").matches){ const f=$("p-corpo").querySelector(".campos input:not([disabled])"); if(f && !f.value) setTimeout(()=>f.focus(),60); }
+  $("ck-voltar").onclick=()=>{ lerForm(); guardarCliente(); if(ckEtapa===0) abrirSacola(); else abrirCheckout(null,ckEtapa-1); };
+  $("ck-enviar").onclick= final ? enviarPedido : avancar;
+}
+function avancar(){
+  lerForm(); guardarCliente();
+  const f=faltaEtapa(ckEtapa);
+  if(f.length){ mostrarFaltas(f); return; }
+  abrirCheckout(null, ckEtapa+1);
+}
+function mostrarFaltas(f){
+  manterRolagem(()=>abrirCheckout("Falta preencher: "+f.map(x=>x[1]).join(", ")+"."));
+  f.forEach(x=>x[0]&&$(x[0])?.classList.add("invalido"));
+  const prim=f.find(x=>x[0]&&$(x[0])); if(prim) $(prim[0]).focus();
 }
 function guardarCliente(){ const {pag,troco,...resto}=cli; guardar("kananba-cliente2", resto); }
-function validar(){
+function faltaEtapa(e){
   const f=[];
-  if(cli.nome.length<2) f.push(["f-nome","seu nome"]);
-  if(!cpfValido(cli.cpf)) f.push(["f-cpf", so(cli.cpf).length?"um CPF válido":"seu CPF"]);
-  if(so(cli.tel).length<10) f.push(["f-tel","um celular com DDD"]);
-  if(cli.modo==="Entrega"){ if(!cli.rua) f.push(["f-rua","a rua"]); if(!cli.numero && !cli.semNumero) f.push(["f-num","o número"]); if(!cli.bairro) f.push(["f-bairro","o bairro"]); }
-  if(!cli.pag) f.push([null,"a forma de pagamento"]);
+  if(e===0){ if(cli.nome.length<2) f.push(["f-nome","seu nome"]); if(!cpfValido(cli.cpf)) f.push(["f-cpf", so(cli.cpf).length?"um CPF válido":"seu CPF"]); if(so(cli.tel).length<10) f.push(["f-tel","um celular com DDD"]); }
+  if(e===1 && cli.modo==="Entrega"){ if(!cli.rua) f.push(["f-rua","a rua"]); if(!cli.numero && !cli.semNumero) f.push(["f-num","o número"]); if(!cli.bairro) f.push(["f-bairro","o bairro"]); }
+  if(e===2 && !cli.pag) f.push([null,"a forma de pagamento"]);
   return f;
 }
 async function enviarPedido(){
   lerForm(); guardarCliente();
-  const f=validar();
-  if(f.length){
-    manterRolagem(()=>abrirCheckout("Falta preencher: "+f.map(x=>x[1]).join(", ")+"."));
-    f.forEach(x=>x[0]&&$(x[0])?.classList.add("invalido"));
-    return;
-  }
+  for(const e of [0,1,2]){ const f=faltaEtapa(e); if(f.length){ ckEtapa=e; mostrarFaltas(f); return; } }
   const b=$("ck-enviar"); b.disabled=true; b.textContent = cli.pag==="Pix"?"Gerando seu Pix…":"Enviando pedido…";
   const itens=[];
   for(const l of sacola){
