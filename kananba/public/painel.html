@@ -161,6 +161,37 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
 .fcard .facoes{display:flex;gap:6px}
 .fcard .facoes label{flex:1;text-align:center;cursor:pointer}
 .fcard input[type=file]{display:none}
+
+/* ---------- gestão ---------- */
+#sec-gestao{max-width:1280px;margin:0 auto;padding:16px 16px 48px;display:flex;flex-direction:column;gap:14px}
+.g-topo{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.g-topo h2{font-family:var(--f-display);font-weight:900;font-size:30px;text-transform:uppercase;margin:4px 0}
+.g-topo p{margin:0;color:var(--texto-2)}
+.g-mes{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:var(--texto-2)}
+.g-mes input{width:auto}
+.num em{display:block;font-style:normal;font-size:12.5px;color:var(--texto-3);margin-top:2px}
+.g-grade{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.g-grade{grid-template-columns:1.2fr 1fr}}
+.g-card{background:var(--grelha);border:1px solid var(--linha);border-radius:16px;padding:16px}
+.g-card h3{margin:0 0 12px;font-size:17px}
+.g-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g-form label{display:flex;flex-direction:column;gap:5px;font-size:13.5px;font-weight:600;color:var(--texto-2)}
+.g-form select{font:inherit;color:var(--texto);background:var(--grelha-2);border:1px solid var(--linha);border-radius:10px;padding:12px}
+.g-l2{grid-column:1/-1}
+.g-pago{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+@media (max-width:520px){.g-form{grid-template-columns:1fr}}
+.opc{font-weight:500;color:var(--texto-3)}
+.g-lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.g-lista li{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--linha)}
+.g-lista li:first-child{border-top:0}
+.g-lista li>div{flex:1;min-width:0}
+.g-lista small{display:block;color:var(--texto-3);font-size:12.5px;margin-top:2px}
+.g-lista strong{font-variant-numeric:tabular-nums;white-space:nowrap}
+.g-lista .ok{color:var(--ok);font-weight:700}.g-lista .pend,.atrasada{color:var(--aviso);font-weight:700}
+.atrasada{color:var(--perigo)}
+.g-cat{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--linha);font-size:13.5px;color:var(--texto-2)}
+.limpar-linha{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-4px 0 14px}
+.limpar-linha small{color:var(--texto-3)}
 </style>
 </head>
 <body>
@@ -201,7 +232,47 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
   <nav class="secoes" role="tablist" aria-label="Seções do painel">
     <button class="secao" role="tab" data-secao="pedidos" aria-selected="true">📋 Pedidos</button>
     <button class="secao" role="tab" data-secao="fotos" aria-selected="false">📷 Fotos do cardápio</button>
+    <button class="secao" role="tab" data-secao="gestao" aria-selected="false">📊 Gestão</button>
   </nav>
+  <section id="sec-gestao" hidden>
+    <div class="g-topo">
+      <div><h2>Gestão</h2><p>Vendas concluídas, compras de insumos, lucro e contas a pagar.</p></div>
+      <label class="g-mes">Mês<input type="month" id="g-mes"></label>
+    </div>
+    <div class="numeros" id="g-numeros"></div>
+    <div class="g-grade">
+      <div class="g-card">
+        <h3>➕ Registrar compra de insumo</h3>
+        <form id="f-insumo" class="g-form">
+          <label class="g-l2">O que comprou<input id="i-desc" placeholder="Ex.: Coxão mole, Carvão, Latas de Coca" required></label>
+          <label>Categoria<select id="i-cat">
+            <option>Carnes</option><option>Acompanhamentos</option><option>Bebidas</option><option>Embalagens</option><option>Carvão e gás</option><option>Entrega</option><option>Outros</option>
+          </select></label>
+          <label>Quantidade <span class="opc">(opcional)</span><input id="i-qtd" placeholder="Ex.: 5 kg, 2 fardos"></label>
+          <label>Valor (R$)<input id="i-valor" inputmode="decimal" placeholder="Ex.: 180,50" required></label>
+          <label>Data da compra<input type="date" id="i-data"></label>
+          <label class="g-l2">Fornecedor <span class="opc">(opcional)</span><input id="i-forn" placeholder="Ex.: Açougue do Zé"></label>
+          <div class="g-l2 g-pago">
+            <label class="lembrar"><input type="checkbox" id="i-pago" checked> Já está pago</label>
+            <label id="i-venc-box" hidden>Vence em<input type="date" id="i-venc"></label>
+          </div>
+          <button class="btn g-l2" type="submit">Registrar compra</button>
+        </form>
+      </div>
+      <div class="g-card">
+        <h3>💸 Contas a pagar</h3>
+        <div id="g-apagar"></div>
+      </div>
+    </div>
+    <div class="g-card">
+      <h3>🧾 Compras do mês</h3>
+      <div id="g-insumos"></div>
+    </div>
+    <div class="g-card">
+      <h3>📈 Vendas por dia</h3>
+      <div id="g-vendas"></div>
+    </div>
+  </section>
   <section id="sec-fotos" hidden>
     <div class="fotos-intro">
       <h2>Fotos do cardápio</h2>
@@ -212,6 +283,7 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
   <main id="sec-pedidos">
     <div class="aviso-cfg" id="aviso-pix" hidden>O Pix ainda não está configurado (falta o MP_ACCESS_TOKEN na Netlify). Os clientes só conseguem pagar na entrega.</div>
     <div class="numeros" id="numeros"></div>
+    <div class="limpar-linha"><button class="btn-sec" id="btn-limpar" type="button">🧹 Limpar concluídos e cancelados</button><small>Os concluídos ficam guardados em 📊 Gestão.</small></div>
     <div class="abas" id="abas" role="tablist"></div>
     <div class="grade" id="grade"></div>
   </main>
@@ -505,9 +577,10 @@ aplicarTema(document.documentElement.getAttribute("data-theme")==="light" ? "lig
 /* ---------- seções ---------- */
 document.querySelectorAll(".secao").forEach(b => b.onclick = () => {
   document.querySelectorAll(".secao").forEach(x => x.setAttribute("aria-selected", x===b));
-  const fotos = b.dataset.secao==="fotos";
-  $("sec-fotos").hidden = !fotos; $("sec-pedidos").hidden = fotos;
-  if(fotos) carregarFotos();
+  const sec = b.dataset.secao;
+  $("sec-fotos").hidden = sec!=="fotos"; $("sec-gestao").hidden = sec!=="gestao"; $("sec-pedidos").hidden = sec!=="pedidos";
+  if(sec==="fotos") carregarFotos();
+  if(sec==="gestao") carregarGestao();
 });
 
 /* ---------- fotos do cardápio ---------- */
@@ -563,6 +636,63 @@ async function removerFoto(id){
   try{ const d = await api("foto-remover", {method:"POST", body:JSON.stringify({id})}); fotos = d.fotos; renderFotos(); }
   catch(e){ if(e.message!=="401") alert(e.message); }
 }
+
+
+/* ---------- limpar pedidos ---------- */
+$("btn-limpar").onclick = async () => {
+  const ps = dados?.pedidos||[];
+  const nc = ps.filter(p=>p.status==="concluido").length, nx = ps.filter(p=>p.status==="cancelado").length;
+  if(!nc && !nx){ alert("Não há pedidos concluídos ou cancelados pra limpar neste dia."); return; }
+  if(!confirm(`Limpar ${nc} concluído(s) e ${nx} cancelado(s) deste dia?\n\nOs valores dos concluídos ficam guardados em 📊 Gestão.`)) return;
+  try{ const d = await api("limpar",{method:"POST", body:JSON.stringify({dia:$("dia").value})}); carregar(); alert(`Pronto! ${d.concluidos} concluído(s) guardado(s) na Gestão e ${d.cancelados} cancelado(s) removido(s).`); }
+  catch(e){ if(e.message!=="401") alert(e.message); }
+};
+
+/* ---------- gestão ---------- */
+let G = null;
+const hojeSP = () => new Date(Date.now()-3*3600e3).toISOString().slice(0,10);
+const fmtData = d => d ? d.split("-").reverse().join("/") : "";
+$("i-data").value = hojeSP(); $("g-mes").value = hojeSP().slice(0,7);
+$("i-pago").onchange = () => { $("i-venc-box").hidden = $("i-pago").checked; };
+$("g-mes").onchange = carregarGestao;
+async function carregarGestao(){
+  try{ G = await api(`gestao?mes=${$("g-mes").value||hojeSP().slice(0,7)}`); renderGestao(); }
+  catch(e){ if(e.message!=="401") $("g-numeros").innerHTML = `<div class="vazio">${esc(e.message)}</div>`; }
+}
+function renderGestao(){
+  const vendas = G.vendas, ins = G.insumos;
+  const receita = vendas.reduce((s,v)=>s+v.total,0), taxas = vendas.reduce((s,v)=>s+(v.taxa||0),0);
+  const gastos = ins.reduce((s,i)=>s+i.valor,0);
+  const pagos = ins.filter(i=>i.pago).reduce((s,i)=>s+i.valor,0);
+  const apagarLista = [...ins.filter(i=>!i.pago), ...G.pendentesAntigos].sort((a,b)=>(a.vencimento||"9").localeCompare(b.vencimento||"9"));
+  const apagar = apagarLista.reduce((s,i)=>s+i.valor,0);
+  const lucro = receita - gastos;
+  $("g-numeros").innerHTML = `
+    <div class="num"><small>Vendas (${vendas.length} pedidos)</small><strong style="color:var(--ok)">${brl(receita)}</strong><em>inclui ${brl(taxas)} de entregas</em></div>
+    <div class="num"><small>Compras de insumos</small><strong style="color:var(--perigo)">${brl(gastos)}</strong><em>${brl(pagos)} já pagos</em></div>
+    <div class="num"><small>Lucro do mês</small><strong style="color:${lucro>=0?"var(--ok)":"var(--perigo)"}">${brl(lucro)}</strong><em>vendas − compras</em></div>
+    <div class="num"><small>Contas a pagar</small><strong style="color:var(--aviso)">${brl(apagar)}</strong><em>${apagarLista.length} conta(s) em aberto</em></div>
+    <div class="num"><small>Sobra em caixa</small><strong>${brl(receita - pagos)}</strong><em>vendas − compras já pagas</em></div>`;
+  const hoje = hojeSP();
+  $("g-apagar").innerHTML = apagarLista.length ? `<ul class="g-lista">${apagarLista.map(i=>`<li><div><b>${esc(i.descricao)}</b><small>${esc(i.categoria)}${i.fornecedor?" · "+esc(i.fornecedor):""} · ${i.vencimento?`<span class="${i.vencimento<hoje?"atrasada":""}">vence ${fmtData(i.vencimento)}${i.vencimento<hoje?" (atrasada)":""}</span>`:"sem vencimento"}</small></div><strong>${brl(i.valor)}</strong><button class="btn-sec" data-pagar="${esc(i.id)}">Marcar pago</button></li>`).join("")}</ul>` : `<div class="vazio">Nenhuma conta em aberto. 👏</div>`;
+  $("g-insumos").innerHTML = ins.length ? `<ul class="g-lista">${ins.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(i=>`<li><div><b>${esc(i.descricao)}</b>${i.qtd?` <span class="opc">${esc(i.qtd)}</span>`:""}<small>${fmtData(i.data)} · ${esc(i.categoria)}${i.fornecedor?" · "+esc(i.fornecedor):""} · ${i.pago?'<span class="ok">pago</span>':'<span class="pend">a pagar</span>'}</small></div><strong>${brl(i.valor)}</strong><button class="btn-perigo" data-remover-ins="${esc(i.id)}" aria-label="Excluir">Excluir</button></li>`).join("")}</ul>
+    <div class="g-cat">${Object.entries(ins.reduce((m,i)=>(m[i.categoria]=(m[i.categoria]||0)+i.valor,m),{})).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`<span>${esc(c)}: <b>${brl(v)}</b></span>`).join("")}</div>` : `<div class="vazio">Nenhuma compra registrada neste mês.</div>`;
+  const porDia = {}; vendas.forEach(v=>{ (porDia[v.dia] ||= {n:0,t:0}); porDia[v.dia].n++; porDia[v.dia].t+=v.total; });
+  const dias = Object.entries(porDia).sort((a,b)=>b[0].localeCompare(a[0]));
+  const top = {}; vendas.forEach(v=>v.itens.forEach(i=>{ top[i.nome]=(top[i.nome]||0)+i.qtd; }));
+  $("g-vendas").innerHTML = dias.length ? `<ul class="g-lista">${dias.map(([d,x])=>`<li><div><b>${fmtData(d)}</b><small>${x.n} pedido(s) · ticket médio ${brl(x.t/x.n)}</small></div><strong>${brl(x.t)}</strong></li>`).join("")}</ul>
+    <div class="g-cat"><span>🏆 Mais vendidos:</span>${Object.entries(top).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n,q])=>`<span>${esc(n)} <b>${q}×</b></span>`).join("")}</div>` : `<div class="vazio">Nenhuma venda concluída neste mês ainda. Ao marcar um pedido como Entregue/Retirado, ele entra aqui.</div>`;
+  document.querySelectorAll("[data-pagar]").forEach(b=>b.onclick=async()=>{ b.disabled=true; try{ await api("insumo-pago",{method:"POST",body:JSON.stringify({id:b.dataset.pagar,pago:true})}); carregarGestao(); }catch(e){ if(e.message!=="401") alert(e.message); b.disabled=false; } });
+  document.querySelectorAll("[data-remover-ins]").forEach(b=>b.onclick=async()=>{ if(!confirm("Excluir esta compra?")) return; try{ await api("insumo-remover",{method:"POST",body:JSON.stringify({id:b.dataset.removerIns})}); carregarGestao(); }catch(e){ if(e.message!=="401") alert(e.message); } });
+}
+$("f-insumo").onsubmit = async e => {
+  e.preventDefault();
+  const corpo = { descricao:$("i-desc").value, categoria:$("i-cat").value, qtd:$("i-qtd").value, valor:$("i-valor").value, data:$("i-data").value, fornecedor:$("i-forn").value, pago:$("i-pago").checked, vencimento:$("i-venc").value };
+  const btn = e.target.querySelector("button[type=submit]"); btn.disabled=true;
+  try{ await api("insumo",{method:"POST",body:JSON.stringify(corpo)}); ["i-desc","i-qtd","i-valor","i-forn","i-venc"].forEach(i=>$(i).value=""); $("g-mes").value = corpo.data.slice(0,7); carregarGestao(); $("i-desc").focus(); }
+  catch(err){ if(err.message!=="401") alert(err.message); }
+  finally{ btn.disabled=false; }
+};
 
 /* ---------- início ---------- */
 if(senha){ api("ping").then(entrar).catch(()=>{}); } else { $("senha").focus(); }

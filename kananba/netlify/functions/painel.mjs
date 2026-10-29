@@ -2,7 +2,7 @@
 // GET  /api/painel/pedidos?dia=AAAA-MM-DD  → pedidos do dia
 // POST /api/painel/status {id, status}     → muda o status do pedido
 import { getStore } from "@netlify/blobs";
-import { CARDAPIO, COMBOS, json, erro, senhaOk, diaDeTrabalho, listarDia, lerPedido, salvarPedido, conferirPix, marcar, mpConfigurado } from "../lib/comum.mjs";
+import { CARDAPIO, COMBOS, json, erro, senhaOk, diaDeTrabalho, listarDia, lerPedido, salvarPedido, conferirPix, marcar, mpConfigurado, loja, chaveDe, registrarVenda, lojaGestao, listarPrefixo, txt, centavos } from "../lib/comum.mjs";
 
 const PROXIMOS = {
   novo: ["em_preparo", "cancelado"],
@@ -45,7 +45,54 @@ export default async (req, context) => {
     p.status = b.status;
     marcar(p, b.status);
     await salvarPedido(p);
+    if (p.status === "concluido") await registrarVenda(p);
     return json({ ok: true, pedido: p });
+  }
+
+  /* ---- limpar pedidos concluídos e cancelados do dia (vendas concluídas ficam guardadas na gestão) ---- */
+  if (req.method === "POST" && acao === "limpar") {
+    let b; try { b = await req.json(); } catch { b = {}; }
+    const dia = /^\d{4}-\d{2}-\d{2}$/.test(b.dia || "") ? b.dia : diaDeTrabalho();
+    const lista = await listarDia(dia);
+    let concluidos = 0, cancelados = 0;
+    for (const p of lista) {
+      if (p.status === "concluido") { await registrarVenda(p); await loja().delete(chaveDe(p.id)); concluidos++; }
+      else if (p.status === "cancelado") { await loja().delete(chaveDe(p.id)); cancelados++; }
+    }
+    return json({ ok: true, concluidos, cancelados });
+  }
+
+  /* ---- gestão: vendas, insumos, lucro e contas a pagar ---- */
+  if (req.method === "GET" && acao === "gestao") {
+    const q = new URL(req.url).searchParams.get("mes");
+    const mes = /^\d{4}-\d{2}$/.test(q || "") ? q : diaDeTrabalho().slice(0, 7);
+    const [vendas, insumos] = await Promise.all([listarPrefixo(`venda/${mes}`), listarPrefixo(`insumo/${mes}/`)]);
+    // contas a pagar de meses anteriores continuam aparecendo
+    const pendentes = (await listarPrefixo("insumo/")).filter((i) => !i.pago && !i.id.startsWith(mes));
+    return json({ mes, vendas, insumos, pendentesAntigos: pendentes });
+  }
+  if (req.method === "POST" && acao === "insumo") {
+    let b; try { b = await req.json(); } catch { return erro("Requisição inválida"); }
+    const data = /^\d{4}-\d{2}-\d{2}$/.test(b.data || "") ? b.data : diaDeTrabalho();
+    const valor = centavos(Number(String(b.valor).replace(",", ".")));
+    if (!(valor > 0)) return erro("Informe o valor da compra.");
+    const descricao = txt(b.descricao, 80); if (!descricao) return erro("Informe o que foi comprado.");
+    const id = `${data.slice(0, 7)}/${data}_${Date.now().toString(36)}`;
+    const ins = { id, data, descricao, categoria: txt(b.categoria, 30) || "Outros", qtd: txt(b.qtd, 30) || null,
+      valor, pago: !!b.pago, vencimento: b.pago ? null : (/^\d{4}-\d{2}-\d{2}$/.test(b.vencimento || "") ? b.vencimento : null),
+      fornecedor: txt(b.fornecedor, 60) || null, criadoEm: new Date().toISOString() };
+    await lojaGestao().setJSON(`insumo/${id}`, ins);
+    return json({ ok: true, insumo: ins });
+  }
+  if (req.method === "POST" && (acao === "insumo-pago" || acao === "insumo-remover")) {
+    let b; try { b = await req.json(); } catch { return erro("Requisição inválida"); }
+    if (!/^\d{4}-\d{2}\/\d{4}-\d{2}-\d{2}_[a-z0-9]+$/.test(b.id || "")) return erro("Compra não encontrada", 404);
+    const s = lojaGestao(), k = `insumo/${b.id}`;
+    if (acao === "insumo-remover") { await s.delete(k); return json({ ok: true }); }
+    const ins = await s.get(k, { type: "json" }); if (!ins) return erro("Compra não encontrada", 404);
+    ins.pago = !!b.pago; ins.pagoEm = ins.pago ? new Date().toISOString() : null;
+    await s.setJSON(k, ins);
+    return json({ ok: true, insumo: ins });
   }
 
   if (req.method === "GET" && acao === "ping") return json({ ok: true, pixAtivo: mpConfigurado() });

@@ -59,6 +59,24 @@ export async function listarDia(dia) {
   return itens.filter(Boolean).sort((a, b) => b.criadoEm.localeCompare(a.criadoEm));
 }
 
+/* ---------- gestão: vendas concluídas e insumos ---------- */
+export const lojaGestao = () => getStore({ name: "gestao", consistency: "strong" });
+// grava o resumo de um pedido concluído (fica guardado mesmo depois de limpar os pedidos)
+export async function registrarVenda(p) {
+  const dia = p.id.slice(0, 10);
+  await lojaGestao().setJSON(`venda/${dia}/${p.id}`, {
+    id: p.id, codigo: p.codigo, dia, concluidoEm: new Date().toISOString(),
+    subtotal: p.subtotal, taxa: p.taxa, total: p.total,
+    forma: p.pagamento.forma, modo: p.entrega.modo,
+    itens: p.itens.map((i) => ({ id: i.id, nome: i.nome, qtd: i.qtd, total: i.total }))
+  });
+}
+export async function listarPrefixo(prefixo) {
+  const s = lojaGestao();
+  const { blobs } = await s.list({ prefix: prefixo });
+  return (await Promise.all(blobs.map((b) => s.get(b.key, { type: "json" })))).filter(Boolean);
+}
+
 /* ---------- fila de produção ---------- */
 export const ATIVOS_FILA = ["novo", "em_preparo"];
 // quantos pedidos estão na frente e a previsão em minutos
