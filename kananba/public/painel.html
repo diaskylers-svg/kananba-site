@@ -192,6 +192,41 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
 .g-cat{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--linha);font-size:13.5px;color:var(--texto-2)}
 .limpar-linha{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-4px 0 14px}
 .limpar-linha small{color:var(--texto-3)}
+
+.g-abas{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.g-abas button{flex:none;border:1px solid var(--linha);background:var(--grelha);color:var(--texto-2);border-radius:999px;padding:9px 14px;font-weight:700}
+.g-abas button[aria-pressed="true"]{border-color:var(--brasa);color:var(--texto);background:var(--brasa-fundo)}
+[data-gsec]{display:flex;flex-direction:column;gap:14px}
+[data-gsec][hidden]{display:none}
+.num.destaque{border-color:var(--brasa);box-shadow:0 0 0 3px var(--brasa-fundo)}
+.g-aviso{background:var(--aviso-fundo);border:1px solid var(--aviso);color:var(--aviso);border-radius:12px;padding:10px 14px;font-size:14px}
+.g-ajuda{color:var(--texto-3);font-size:13.5px;margin:0 0 12px}
+.g-dir{text-align:right}
+.g-tabela{overflow-x:auto}
+.g-tabela table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.g-tabela th{text-align:left;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--texto-3);padding:6px 8px;border-bottom:1px solid var(--linha)}
+.g-tabela td{padding:8px;border-bottom:1px solid var(--linha);white-space:nowrap}
+.g-tabela td:first-child{white-space:normal}
+.margem{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:700;font-size:12.5px}
+.margem.boa{background:var(--ok-fundo);color:var(--ok)}.margem.media{background:var(--aviso-fundo);color:var(--aviso)}.margem.baixa{background:var(--perigo-fundo);color:var(--perigo)}
+.g-qtd{display:flex;align-items:center;gap:6px}.g-qtd input{flex:1;min-width:0}.g-qtd b{min-width:28px;color:var(--texto-2);font-size:13px}
+.g-grupo{margin-bottom:14px}.g-grupo h4{margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--texto-3)}
+.g-ins-linha{display:grid;grid-template-columns:1fr 80px 150px;gap:8px;margin-bottom:6px}
+.g-ins-linha select,.g-ficha-linha select,#f-prod,#i-ins{font:inherit;color:var(--texto);background:var(--grelha-2);border:1px solid var(--linha);border-radius:10px;padding:10px;min-width:0}
+.g-ins-linha.sem-preco .g-preco input{border-color:var(--aviso)}
+.g-preco{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--texto-3)}.g-preco input{min-width:0}
+@media (max-width:560px){.g-ins-linha{grid-template-columns:1fr 70px}.g-preco{grid-column:1/-1}}
+.g-acoes-cad{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:8px;position:sticky;bottom:8px}
+.g-ficha{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.g-ficha-linha{display:grid;grid-template-columns:1fr 150px 90px auto;gap:8px;align-items:center}
+@media (max-width:620px){.g-ficha-linha{grid-template-columns:1fr 1fr}.g-ficha-linha select{grid-column:1/-1}}
+.g-c1{font-size:13px;color:var(--texto-2);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.g-ficha-total{margin-top:12px;padding-top:10px;border-top:1px solid var(--linha);font-size:15px}
+.g-ficha-total .ok,.g-dir .ok{color:var(--ok)}
+.g-prev{grid-template-columns:repeat(2,minmax(0,220px));margin-bottom:12px}
+#f-prod{min-width:280px}
+.pend{color:var(--aviso);font-weight:700}
+.margem.nd{background:var(--grelha-2);color:var(--texto-3)}
 </style>
 </head>
 <body>
@@ -236,41 +271,77 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
   </nav>
   <section id="sec-gestao" hidden>
     <div class="g-topo">
-      <div><h2>Gestão</h2><p>Vendas concluídas, compras de insumos, lucro e contas a pagar.</p></div>
+      <div><h2>Gestão</h2><p>Lucro de verdade, custo de cada produto e quanto comprar.</p></div>
       <label class="g-mes">Mês<input type="month" id="g-mes"></label>
     </div>
-    <div class="numeros" id="g-numeros"></div>
-    <div class="g-grade">
-      <div class="g-card">
-        <h3>➕ Registrar compra de insumo</h3>
-        <form id="f-insumo" class="g-form">
-          <label class="g-l2">O que comprou<input id="i-desc" placeholder="Ex.: Coxão mole, Carvão, Latas de Coca" required></label>
-          <label>Categoria<select id="i-cat">
-            <option>Carnes</option><option>Acompanhamentos</option><option>Bebidas</option><option>Embalagens</option><option>Carvão e gás</option><option>Entrega</option><option>Outros</option>
-          </select></label>
-          <label>Quantidade <span class="opc">(opcional)</span><input id="i-qtd" placeholder="Ex.: 5 kg, 2 fardos"></label>
-          <label>Valor (R$)<input id="i-valor" inputmode="decimal" placeholder="Ex.: 180,50" required></label>
-          <label>Data da compra<input type="date" id="i-data"></label>
-          <label class="g-l2">Fornecedor <span class="opc">(opcional)</span><input id="i-forn" placeholder="Ex.: Açougue do Zé"></label>
-          <div class="g-l2 g-pago">
-            <label class="lembrar"><input type="checkbox" id="i-pago" checked> Já está pago</label>
-            <label id="i-venc-box" hidden>Vence em<input type="date" id="i-venc"></label>
-          </div>
-          <button class="btn g-l2" type="submit">Registrar compra</button>
-        </form>
+    <nav class="g-abas" id="g-abas">
+      <button data-g="resumo" aria-pressed="true">📊 Resumo</button>
+      <button data-g="compras" aria-pressed="false">🧾 Compras e contas</button>
+      <button data-g="insumos" aria-pressed="false">🥩 Insumos e preços</button>
+      <button data-g="fichas" aria-pressed="false">📋 Fichas técnicas</button>
+      <button data-g="previsao" aria-pressed="false">🛒 Previsão de compras</button>
+    </nav>
+
+    <div data-gsec="resumo">
+      <div class="numeros" id="g-numeros"></div>
+      <div class="g-aviso" id="g-aviso-precos" hidden></div>
+      <div class="g-card"><h3>📈 Vendas por dia</h3><div id="g-vendas"></div></div>
+      <div class="g-card"><h3>💰 Margem por produto</h3><p class="g-ajuda">Quanto sobra em cada venda, depois de pagar os ingredientes e a embalagem.</p><div id="g-margens"></div></div>
+    </div>
+
+    <div data-gsec="compras" hidden>
+      <div class="g-grade">
+        <div class="g-card">
+          <h3>➕ Registrar compra</h3>
+          <form id="f-insumo" class="g-form">
+            <label class="g-l2">Insumo<select id="i-ins"></select></label>
+            <label class="g-l2" id="i-desc-box" hidden>Descrição do gasto<input id="i-desc" placeholder="Ex.: Conserto da churrasqueira"></label>
+            <label>Quantidade comprada<span class="g-qtd"><input id="i-quant" inputmode="decimal" placeholder="Ex.: 5"><b id="i-un">kg</b></span></label>
+            <label>Valor pago (R$)<input id="i-valor" inputmode="decimal" placeholder="Ex.: 180,50" required></label>
+            <p class="g-l2 g-ajuda" id="i-calc"></p>
+            <label>Data da compra<input type="date" id="i-data"></label>
+            <label>Fornecedor <span class="opc">(opcional)</span><input id="i-forn" placeholder="Ex.: Açougue do Zé"></label>
+            <div class="g-l2 g-pago">
+              <label class="lembrar"><input type="checkbox" id="i-pago" checked> Já está pago</label>
+              <label id="i-venc-box" hidden>Vence em<input type="date" id="i-venc"></label>
+            </div>
+            <button class="btn g-l2" type="submit">Registrar compra</button>
+          </form>
+        </div>
+        <div class="g-card"><h3>💸 Contas a pagar</h3><div id="g-apagar"></div></div>
       </div>
+      <div class="g-card"><h3>🧾 Compras do mês</h3><div id="g-insumos"></div></div>
+    </div>
+
+    <div data-gsec="insumos" hidden>
       <div class="g-card">
-        <h3>💸 Contas a pagar</h3>
-        <div id="g-apagar"></div>
+        <h3>🥩 Insumos e preços</h3>
+        <p class="g-ajuda">O preço é por <b>kg</b>, <b>litro</b> ou <b>unidade</b>. Ele é atualizado sozinho quando você registra uma compra com a quantidade. Pode ajustar aqui também.</p>
+        <div id="g-cad-insumos"></div>
+        <div class="g-acoes-cad"><button class="btn-sec" id="btn-novo-ins" type="button">➕ Novo insumo</button><button class="btn" id="btn-salvar-cad1" type="button">Salvar alterações</button></div>
       </div>
     </div>
-    <div class="g-card">
-      <h3>🧾 Compras do mês</h3>
-      <div id="g-insumos"></div>
+
+    <div data-gsec="fichas" hidden>
+      <div class="g-card">
+        <h3>📋 Fichas técnicas</h3>
+        <p class="g-ajuda">Quanto de cada insumo vai em cada produto. Os números iniciais são <b>estimativas</b>: pese na sua balança e ajuste. <b>Preparos</b> (tempero, baião, vinagrete...) são receitas usadas por vários produtos: mudou ali, muda em todos.</p>
+        <label class="g-mes">Produto ou preparo<select id="f-prod"></select></label>
+        <div id="g-ficha"></div>
+        <div class="g-acoes-cad"><button class="btn" id="btn-salvar-cad2" type="button">Salvar fichas</button></div>
+      </div>
     </div>
-    <div class="g-card">
-      <h3>📈 Vendas por dia</h3>
-      <div id="g-vendas"></div>
+
+    <div data-gsec="previsao" hidden>
+      <div class="g-card">
+        <h3>🛒 Previsão de compras</h3>
+        <p class="g-ajuda" id="prev-base"></p>
+        <div class="g-form g-prev">
+          <label>Planejar para quantos dias?<input id="prev-dias" type="number" min="1" max="60" value="7"></label>
+          <label>Média de pedidos por dia<input id="prev-ped" type="number" min="1" max="500"></label>
+        </div>
+        <div id="g-prev"></div>
+      </div>
     </div>
   </section>
   <section id="sec-fotos" hidden>
@@ -291,6 +362,7 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
 
 <script type="module">
 import { CARDAPIO, COMBOS } from "./loja.mjs";
+import { mesclarCadastro, consumo, consumoVenda, custoDeConsumo, custoProduto, unidadeUso } from "./gestao-base.mjs";
 const $ = id => document.getElementById(id);
 const brl = v => (v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -649,50 +721,212 @@ $("btn-limpar").onclick = async () => {
 };
 
 /* ---------- gestão ---------- */
-let G = null;
+let G = null, CAD = null, cadAlterado = false;
 const hojeSP = () => new Date(Date.now()-3*3600e3).toISOString().slice(0,10);
 const fmtData = d => d ? d.split("-").reverse().join("/") : "";
+const num = v => Number(String(v??"").replace(",","."));
+const fmtQ = (q, un) => { const u = unidadeUso(un); if(u==="g" && q>=1000) return (q/1000).toLocaleString("pt-BR",{maximumFractionDigits:2})+" kg"; if(u==="ml" && q>=1000) return (q/1000).toLocaleString("pt-BR",{maximumFractionDigits:2})+" L"; return q.toLocaleString("pt-BR",{maximumFractionDigits:1})+" "+u; };
 $("i-data").value = hojeSP(); $("g-mes").value = hojeSP().slice(0,7);
 $("i-pago").onchange = () => { $("i-venc-box").hidden = $("i-pago").checked; };
 $("g-mes").onchange = carregarGestao;
-async function carregarGestao(){
-  try{ G = await api(`gestao?mes=${$("g-mes").value||hojeSP().slice(0,7)}`); renderGestao(); }
-  catch(e){ if(e.message!=="401") $("g-numeros").innerHTML = `<div class="vazio">${esc(e.message)}</div>`; }
+
+// sub-abas
+document.querySelectorAll("#g-abas [data-g]").forEach(b=>b.onclick=()=>{
+  if(cadAlterado && !confirm("Você tem alterações não salvas nos insumos/fichas. Sair sem salvar?")) return;
+  if(cadAlterado){ cadAlterado=false; carregarCadastro().then(renderTudo); }
+  document.querySelectorAll("#g-abas [data-g]").forEach(x=>x.setAttribute("aria-pressed", String(x===b)));
+  document.querySelectorAll("[data-gsec]").forEach(d=>d.hidden = d.dataset.gsec!==b.dataset.g);
+});
+
+async function carregarCadastro(){
+  const d = await api("cadastro");
+  CAD = mesclarCadastro(d.cadastro);
+  if(!d.cadastro) await api("cadastro",{method:"POST", body:JSON.stringify({cadastro:CAD})}); // grava o padrão na primeira vez
 }
-function renderGestao(){
+async function carregarGestao(){
+  try{
+    await carregarCadastro();
+    G = await api(`gestao?mes=${$("g-mes").value||hojeSP().slice(0,7)}`);
+    renderTudo();
+  }catch(e){ if(e.message!=="401") $("g-numeros").innerHTML = `<div class="vazio">${esc(e.message)}</div>`; }
+}
+function renderTudo(){ renderResumo(); renderCompras(); renderCadInsumos(); renderSelectFicha(); renderFicha(); renderPrevisao(); }
+const insPorId = id => CAD.insumos.find(i=>i.id===id);
+const nomeRef = ref => ref.startsWith("@") ? "🍳 "+(CAD.preparos[ref.slice(1)]?.nome||ref) : (insPorId(ref)?.nome||ref);
+
+/* ===== RESUMO: lucro separado ===== */
+function renderResumo(){
   const vendas = G.vendas, ins = G.insumos;
   const receita = vendas.reduce((s,v)=>s+v.total,0), taxas = vendas.reduce((s,v)=>s+(v.taxa||0),0);
-  const gastos = ins.reduce((s,i)=>s+i.valor,0);
-  const pagos = ins.filter(i=>i.pago).reduce((s,i)=>s+i.valor,0);
-  const apagarLista = [...ins.filter(i=>!i.pago), ...G.pendentesAntigos].sort((a,b)=>(a.vencimento||"9").localeCompare(b.vencimento||"9"));
+  const consumoTotal = {}; vendas.forEach(v=>consumoVenda(v, CAD, consumoTotal));
+  const cmv = custoDeConsumo(consumoTotal, CAD);
+  const lucroBruto = receita - cmv.total;
+  const compras = ins.reduce((s,i)=>s+i.valor,0), pagos = ins.filter(i=>i.pago).reduce((s,i)=>s+i.valor,0);
+  const apagarLista = [...ins.filter(i=>!i.pago), ...G.pendentesAntigos];
   const apagar = apagarLista.reduce((s,i)=>s+i.valor,0);
-  const lucro = receita - gastos;
+  const caixa = receita - pagos;
   $("g-numeros").innerHTML = `
-    <div class="num"><small>Vendas (${vendas.length} pedidos)</small><strong style="color:var(--ok)">${brl(receita)}</strong><em>inclui ${brl(taxas)} de entregas</em></div>
-    <div class="num"><small>Compras de insumos</small><strong style="color:var(--perigo)">${brl(gastos)}</strong><em>${brl(pagos)} já pagos</em></div>
-    <div class="num"><small>Lucro do mês</small><strong style="color:${lucro>=0?"var(--ok)":"var(--perigo)"}">${brl(lucro)}</strong><em>vendas − compras</em></div>
-    <div class="num"><small>Contas a pagar</small><strong style="color:var(--aviso)">${brl(apagar)}</strong><em>${apagarLista.length} conta(s) em aberto</em></div>
-    <div class="num"><small>Sobra em caixa</small><strong>${brl(receita - pagos)}</strong><em>vendas − compras já pagas</em></div>`;
-  const hoje = hojeSP();
-  $("g-apagar").innerHTML = apagarLista.length ? `<ul class="g-lista">${apagarLista.map(i=>`<li><div><b>${esc(i.descricao)}</b><small>${esc(i.categoria)}${i.fornecedor?" · "+esc(i.fornecedor):""} · ${i.vencimento?`<span class="${i.vencimento<hoje?"atrasada":""}">vence ${fmtData(i.vencimento)}${i.vencimento<hoje?" (atrasada)":""}</span>`:"sem vencimento"}</small></div><strong>${brl(i.valor)}</strong><button class="btn-sec" data-pagar="${esc(i.id)}">Marcar pago</button></li>`).join("")}</ul>` : `<div class="vazio">Nenhuma conta em aberto. 👏</div>`;
-  $("g-insumos").innerHTML = ins.length ? `<ul class="g-lista">${ins.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(i=>`<li><div><b>${esc(i.descricao)}</b>${i.qtd?` <span class="opc">${esc(i.qtd)}</span>`:""}<small>${fmtData(i.data)} · ${esc(i.categoria)}${i.fornecedor?" · "+esc(i.fornecedor):""} · ${i.pago?'<span class="ok">pago</span>':'<span class="pend">a pagar</span>'}</small></div><strong>${brl(i.valor)}</strong><button class="btn-perigo" data-remover-ins="${esc(i.id)}" aria-label="Excluir">Excluir</button></li>`).join("")}</ul>
-    <div class="g-cat">${Object.entries(ins.reduce((m,i)=>(m[i.categoria]=(m[i.categoria]||0)+i.valor,m),{})).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`<span>${esc(c)}: <b>${brl(v)}</b></span>`).join("")}</div>` : `<div class="vazio">Nenhuma compra registrada neste mês.</div>`;
-  const porDia = {}; vendas.forEach(v=>{ (porDia[v.dia] ||= {n:0,t:0}); porDia[v.dia].n++; porDia[v.dia].t+=v.total; });
+    <div class="num"><small>Faturamento (${vendas.length} pedidos)</small><strong style="color:var(--ok)">${brl(receita)}</strong><em>${brl(taxas)} de taxas de entrega</em></div>
+    <div class="num"><small>Custo dos ingredientes vendidos</small><strong style="color:var(--perigo)">${brl(cmv.total)}</strong><em>calculado pelas fichas técnicas</em></div>
+    <div class="num destaque"><small>Lucro das vendas</small><strong style="color:${lucroBruto>=0?"var(--ok)":"var(--perigo)"}">${brl(lucroBruto)}</strong><em>${receita?Math.round(lucroBruto/receita*100):0}% do faturamento</em></div>
+    <div class="num"><small>Compras do mês</small><strong>${brl(compras)}</strong><em>${brl(pagos)} pagos · ${brl(compras-pagos)} a pagar</em></div>
+    <div class="num"><small>Contas a pagar (deveres)</small><strong style="color:var(--aviso)">${brl(apagar)}</strong><em>${apagarLista.length} conta(s) em aberto</em></div>
+    <div class="num"><small>Dinheiro em caixa</small><strong>${brl(caixa)}</strong><em>faturamento − compras pagas</em></div>`;
+  const sem = [...new Set(cmv.faltaPreco)];
+  $("g-aviso-precos").hidden = !sem.length;
+  if(sem.length) $("g-aviso-precos").innerHTML = `⚠ O custo está incompleto: falta o preço de <b>${sem.slice(0,6).map(id=>esc(insPorId(id)?.nome||id)).join(", ")}${sem.length>6?` e mais ${sem.length-6}`:""}</b>. Registre uma compra deles ou coloque o preço em <b>🥩 Insumos e preços</b>.`;
+  // vendas por dia
+  const porDia = {}; vendas.forEach(v=>{ (porDia[v.dia] ||= {n:0,t:0,c:0}); porDia[v.dia].n++; porDia[v.dia].t+=v.total; porDia[v.dia].c+=custoDeConsumo(consumoVenda(v,CAD,{}),CAD).total; });
   const dias = Object.entries(porDia).sort((a,b)=>b[0].localeCompare(a[0]));
   const top = {}; vendas.forEach(v=>v.itens.forEach(i=>{ top[i.nome]=(top[i.nome]||0)+i.qtd; }));
-  $("g-vendas").innerHTML = dias.length ? `<ul class="g-lista">${dias.map(([d,x])=>`<li><div><b>${fmtData(d)}</b><small>${x.n} pedido(s) · ticket médio ${brl(x.t/x.n)}</small></div><strong>${brl(x.t)}</strong></li>`).join("")}</ul>
-    <div class="g-cat"><span>🏆 Mais vendidos:</span>${Object.entries(top).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n,q])=>`<span>${esc(n)} <b>${q}×</b></span>`).join("")}</div>` : `<div class="vazio">Nenhuma venda concluída neste mês ainda. Ao marcar um pedido como Entregue/Retirado, ele entra aqui.</div>`;
+  $("g-vendas").innerHTML = dias.length ? `<ul class="g-lista">${dias.map(([d,x])=>`<li><div><b>${fmtData(d)}</b><small>${x.n} pedido(s) · ticket médio ${brl(x.t/x.n)} · custo ${brl(x.c)}</small></div><div class="g-dir"><strong>${brl(x.t)}</strong><small class="ok">lucro ${brl(x.t-x.c)}</small></div></li>`).join("")}</ul>
+    <div class="g-cat"><span>🏆 Mais vendidos:</span>${Object.entries(top).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n,q])=>`<span>${esc(n)} <b>${q}×</b></span>`).join("")}</div>`
+    : `<div class="vazio">Nenhuma venda concluída neste mês ainda. Ao marcar um pedido como Entregue/Retirado, ele entra aqui.</div>`;
+  // margens
+  const linhasM = [];
+  CARDAPIO.filter(c=>!c.oculto).forEach(c=>{
+    const k = custoProduto(c.id, CAD); linhasM.push([c.nome, c.preco, k]);
+    if(c.precoCompleto!=null) linhasM.push([c.nome+" · Completinho", c.precoCompleto, custoProduto(c.id, CAD, true)]);
+  });
+  const espetosCombo = CARDAPIO.filter(c=>c.grupo==="espetos" && !c.semCombo);
+  COMBOS.forEach(cb=>{
+    const fixo = custoProduto(cb.id, CAD); const media = espetosCombo.reduce((s,e)=>s+custoProduto(e.id,CAD).total,0)/espetosCombo.length;
+    linhasM.push([cb.nome+" (média dos sabores)", cb.preco, {total: fixo.total + media*cb.espetos, faltaPreco: fixo.faltaPreco}]);
+  });
+  $("g-margens").innerHTML = `<div class="g-tabela"><table><thead><tr><th>Produto</th><th>Preço</th><th>Custo</th><th>Lucro</th><th>Margem</th></tr></thead><tbody>${linhasM.map(([n,p,k])=>{
+    const inc = k.faltaPreco.length>0, luc = p-k.total, m = p? luc/p*100 : 0;
+    return `<tr><td>${esc(n)}</td><td>${brl(p)}</td><td>${inc?`<span class="pend" title="falta preço de algum insumo">${brl(k.total)}*</span>`:brl(k.total)}</td><td>${inc?"—":brl(luc)}</td><td>${inc?`<span class="margem nd" title="Cadastre o preço de todos os insumos desse produto">?</span>`:`<span class="margem ${m<40?"baixa":m<60?"media":"boa"}">${Math.round(m)}%</span>`}</td></tr>`; }).join("")}</tbody></table></div>
+    <p class="g-ajuda">* custo incompleto: falta o preço de algum insumo, então o lucro real ainda não dá pra saber (<span class="margem nd">?</span>). Margem: <span class="margem boa">60%+ boa</span> <span class="margem media">40–60% ok</span> <span class="margem baixa">abaixo de 40% atenção</span></p>`;
+}
+
+/* ===== COMPRAS E CONTAS ===== */
+function renderSelectCompra(){
+  const cats = [...new Set(CAD.insumos.map(i=>i.cat))];
+  $("i-ins").innerHTML = cats.map(c=>`<optgroup label="${esc(c)}">${CAD.insumos.filter(i=>i.cat===c).sort((a,b)=>a.nome.localeCompare(b.nome)).map(i=>`<option value="${esc(i.id)}">${esc(i.nome)}</option>`).join("")}</optgroup>`).join("")
+    + `<optgroup label="Outros"><option value="">Outro gasto (não é insumo)</option></optgroup>`;
+  atualizarFormCompra();
+}
+function atualizarFormCompra(){
+  const i = insPorId($("i-ins").value);
+  $("i-desc-box").hidden = !!i; $("i-un").textContent = i ? i.un : "";
+  $("i-quant").disabled = !i; if(!i) $("i-quant").value="";
+  const q=num($("i-quant").value), v=num($("i-valor").value);
+  $("i-calc").textContent = i && q>0 && v>0 ? `= ${brl(v/q)} por ${i.un}. Esse preço passa a ser usado no custo dos produtos.` : (i?.preco!=null ? `Último preço: ${brl(i.preco)} por ${i.un}.` : "");
+}
+$("i-ins").onchange = atualizarFormCompra; $("i-quant").oninput = atualizarFormCompra; $("i-valor").oninput = atualizarFormCompra;
+function renderCompras(){
+  renderSelectCompra();
+  const ins = G.insumos, hoje = hojeSP();
+  const apagarLista = [...ins.filter(i=>!i.pago), ...G.pendentesAntigos].sort((a,b)=>(a.vencimento||"9").localeCompare(b.vencimento||"9"));
+  $("g-apagar").innerHTML = apagarLista.length ? `<ul class="g-lista">${apagarLista.map(i=>`<li><div><b>${esc(i.descricao)}</b><small>${esc(i.categoria)}${i.fornecedor?" · "+esc(i.fornecedor):""} · ${i.vencimento?`<span class="${i.vencimento<hoje?"atrasada":""}">vence ${fmtData(i.vencimento)}${i.vencimento<hoje?" (atrasada)":""}</span>`:"sem vencimento"}</small></div><strong>${brl(i.valor)}</strong><button class="btn-sec" data-pagar="${esc(i.id)}">Marcar pago</button></li>`).join("")}</ul>` : `<div class="vazio">Nenhuma conta em aberto. 👏</div>`;
+  $("g-insumos").innerHTML = ins.length ? `<ul class="g-lista">${ins.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(i=>`<li><div><b>${esc(i.descricao)}</b>${i.quantidade?` <span class="opc">${i.quantidade.toLocaleString("pt-BR")} ${esc(i.un||"")}</span>`:i.qtd?` <span class="opc">${esc(i.qtd)}</span>`:""}<small>${fmtData(i.data)} · ${esc(i.categoria)}${i.fornecedor?" · "+esc(i.fornecedor):""}${i.precoUnit?` · ${brl(i.precoUnit)}/${esc(i.un)}`:""} · ${i.pago?'<span class="ok">pago</span>':'<span class="pend">a pagar</span>'}</small></div><strong>${brl(i.valor)}</strong><button class="btn-perigo" data-remover-ins="${esc(i.id)}">Excluir</button></li>`).join("")}</ul>
+    <div class="g-cat">${Object.entries(ins.reduce((m,i)=>(m[i.categoria]=(m[i.categoria]||0)+i.valor,m),{})).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`<span>${esc(c)}: <b>${brl(v)}</b></span>`).join("")}</div>` : `<div class="vazio">Nenhuma compra registrada neste mês.</div>`;
   document.querySelectorAll("[data-pagar]").forEach(b=>b.onclick=async()=>{ b.disabled=true; try{ await api("insumo-pago",{method:"POST",body:JSON.stringify({id:b.dataset.pagar,pago:true})}); carregarGestao(); }catch(e){ if(e.message!=="401") alert(e.message); b.disabled=false; } });
   document.querySelectorAll("[data-remover-ins]").forEach(b=>b.onclick=async()=>{ if(!confirm("Excluir esta compra?")) return; try{ await api("insumo-remover",{method:"POST",body:JSON.stringify({id:b.dataset.removerIns})}); carregarGestao(); }catch(e){ if(e.message!=="401") alert(e.message); } });
 }
 $("f-insumo").onsubmit = async e => {
   e.preventDefault();
-  const corpo = { descricao:$("i-desc").value, categoria:$("i-cat").value, qtd:$("i-qtd").value, valor:$("i-valor").value, data:$("i-data").value, fornecedor:$("i-forn").value, pago:$("i-pago").checked, vencimento:$("i-venc").value };
+  const i = insPorId($("i-ins").value);
+  if(i && !(num($("i-quant").value)>0)){ alert(`Informe a quantidade comprada (em ${i.un}). É com ela que o sistema calcula o preço por ${i.un}.`); $("i-quant").focus(); return; }
+  if(!i && !$("i-desc").value.trim()){ alert("Descreva o gasto."); $("i-desc").focus(); return; }
+  const corpo = { insumoId: i?.id||null, quantidade: i?$("i-quant").value:null, descricao: i?i.nome:$("i-desc").value, categoria: i?i.cat:"Outros",
+    valor:$("i-valor").value, data:$("i-data").value, fornecedor:$("i-forn").value, pago:$("i-pago").checked, vencimento:$("i-venc").value };
   const btn = e.target.querySelector("button[type=submit]"); btn.disabled=true;
-  try{ await api("insumo",{method:"POST",body:JSON.stringify(corpo)}); ["i-desc","i-qtd","i-valor","i-forn","i-venc"].forEach(i=>$(i).value=""); $("g-mes").value = corpo.data.slice(0,7); carregarGestao(); $("i-desc").focus(); }
+  try{ await api("insumo",{method:"POST",body:JSON.stringify(corpo)}); ["i-desc","i-quant","i-valor","i-venc"].forEach(x=>$(x).value=""); $("g-mes").value = corpo.data.slice(0,7); await carregarGestao(); }
   catch(err){ if(err.message!=="401") alert(err.message); }
   finally{ btn.disabled=false; }
 };
+
+/* ===== INSUMOS E PREÇOS ===== */
+function renderCadInsumos(){
+  const cats = [...new Set(CAD.insumos.map(i=>i.cat))];
+  $("g-cad-insumos").innerHTML = cats.map(c=>`<div class="g-grupo"><h4>${esc(c)}</h4>${CAD.insumos.map((i,k)=>[i,k]).filter(([i])=>i.cat===c).map(([i,k])=>`
+    <div class="g-ins-linha${i.preco==null?" sem-preco":""}">
+      <input value="${esc(i.nome)}" data-k="${k}" data-campo="nome" aria-label="Nome">
+      <select data-k="${k}" data-campo="un" aria-label="Unidade">${["kg","L","un"].map(u=>`<option ${i.un===u?"selected":""}>${u}</option>`).join("")}</select>
+      <span class="g-preco">R$<input value="${i.preco==null?"":String(i.preco).replace(".",",")}" placeholder="—" inputmode="decimal" data-k="${k}" data-campo="preco" aria-label="Preço"><small>/${esc(i.un)}</small></span>
+    </div>`).join("")}</div>`).join("");
+  $("g-cad-insumos").querySelectorAll("[data-campo]").forEach(el=>el.onchange=()=>{
+    const i = CAD.insumos[+el.dataset.k], c = el.dataset.campo;
+    i[c] = c==="preco" ? (el.value.trim()===""?null:num(el.value)) : el.value;
+    cadAlterado = true; if(c==="un") renderCadInsumos();
+  });
+}
+$("btn-novo-ins").onclick = () => {
+  const nome = prompt("Nome do novo insumo (ex.: Picanha, Pote 250 ml):"); if(!nome) return;
+  const un = (prompt("Unidade: kg, L ou un", "kg")||"kg").trim(); const cat = prompt("Categoria (ex.: Carnes, Temperos, Embalagens):","Outros")||"Outros";
+  const id = nome.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").slice(0,40)+"-"+Date.now().toString(36).slice(-3);
+  CAD.insumos.push({id, nome, cat, un:["kg","L","un"].includes(un)?un:"un", preco:null}); cadAlterado=true; renderCadInsumos();
+};
+async function salvarCadastro(){
+  try{ await api("cadastro",{method:"POST",body:JSON.stringify({cadastro:CAD})}); cadAlterado=false; renderTudo(); alert("Salvo! Os custos e a previsão já foram recalculados."); }
+  catch(e){ if(e.message!=="401") alert(e.message); }
+}
+$("btn-salvar-cad1").onclick = salvarCadastro; $("btn-salvar-cad2").onclick = salvarCadastro;
+
+/* ===== FICHAS TÉCNICAS ===== */
+function renderSelectFicha(){
+  const atual = $("f-prod").value;
+  const op = (v,t)=>`<option value="${esc(v)}">${esc(t)}</option>`;
+  $("f-prod").innerHTML =
+    `<optgroup label="🍳 Preparos (receitas base)">${Object.entries(CAD.preparos).map(([k,p])=>op("@"+k,p.nome)).join("")}</optgroup>`+
+    `<optgroup label="Espetos">${CARDAPIO.filter(c=>c.grupo==="espetos").map(c=>op(c.id,c.nome)).join("")}${op("completo","+ o que o Completinho soma")}</optgroup>`+
+    `<optgroup label="Combos (parte fixa, sem os espetos)">${COMBOS.map(c=>op(c.id,c.nome)).join("")}</optgroup>`+
+    `<optgroup label="Acompanhamentos">${CARDAPIO.filter(c=>c.grupo==="acomp").map(c=>op(c.id,c.nome)).join("")}</optgroup>`+
+    `<optgroup label="Bebidas">${CARDAPIO.filter(c=>c.grupo==="bebidas").map(c=>op(c.id,c.nome)).join("")}</optgroup>`+
+    `<optgroup label="Todo pedido">${op("pedido","Itens que vão em todo pedido (brinde, sacola...)")}</optgroup>`;
+  if(atual) $("f-prod").value = atual;
+}
+$("f-prod").onchange = renderFicha;
+function listaAtual(){ const v=$("f-prod").value; if(v.startsWith("@")) return CAD.preparos[v.slice(1)].itens; return (CAD.fichas[v] ||= []); }
+function renderFicha(){
+  const v = $("f-prod").value; if(!v) return;
+  const lista = listaAtual();
+  const opcoes = sel => `<option value="">Escolha…</option><optgroup label="Preparos">${Object.entries(CAD.preparos).filter(([k])=>"@"+k!==v).map(([k,p])=>`<option value="@${k}" ${sel==="@"+k?"selected":""}>🍳 ${esc(p.nome)}</option>`).join("")}</optgroup>`+
+    [...new Set(CAD.insumos.map(i=>i.cat))].map(c=>`<optgroup label="${esc(c)}">${CAD.insumos.filter(i=>i.cat===c).map(i=>`<option value="${esc(i.id)}" ${sel===i.id?"selected":""}>${esc(i.nome)}</option>`).join("")}</optgroup>`).join("");
+  const custo = custoDeConsumo(consumo(lista, CAD, 1, {}), CAD);
+  const prod = CARDAPIO.find(c=>c.id===v) || COMBOS.find(c=>c.id===v);
+  $("g-ficha").innerHTML = `<div class="g-ficha">${lista.map(([ref,q],k)=>{
+      const un = ref.startsWith("@") ? "porção" : unidadeUso(insPorId(ref)?.un||"un");
+      const c1 = custoDeConsumo(consumo([[ref,q]],CAD,1,{}),CAD);
+      return `<div class="g-ficha-linha"><select data-fk="${k}" data-fc="ref">${opcoes(ref)}</select><span class="g-qtd"><input value="${String(q).replace(".",",")}" inputmode="decimal" data-fk="${k}" data-fc="q"><b>${un}</b></span><span class="g-c1">${c1.faltaPreco.length?"sem preço":brl(c1.total)}</span><button class="btn-perigo" data-frm="${k}" aria-label="Remover">✕</button></div>`; }).join("")}
+    <button class="btn-sec" id="f-add" type="button">➕ Adicionar ingrediente</button></div>
+    <div class="g-ficha-total">Custo ${v.startsWith("@")?"da porção":"por unidade"}: <b>${brl(custo.total)}</b>${custo.faltaPreco.length?` <span class="pend">(incompleto: falta preço de ${custo.faltaPreco.length} insumo${custo.faltaPreco.length>1?"s":""})</span>`:""}${prod&&!COMBOS.includes(prod)?` · Preço de venda ${brl(prod.preco)} · <b class="ok">lucro ${brl(prod.preco-custo.total)}</b>`:""}</div>`;
+  $("g-ficha").querySelectorAll("[data-fc]").forEach(el=>el.onchange=()=>{ const l=listaAtual(), k=+el.dataset.fk; if(el.dataset.fc==="ref") l[k][0]=el.value; else l[k][1]=num(el.value)||0; cadAlterado=true; renderFicha(); });
+  $("g-ficha").querySelectorAll("[data-frm]").forEach(b=>b.onclick=()=>{ listaAtual().splice(+b.dataset.frm,1); cadAlterado=true; renderFicha(); });
+  $("f-add").onclick = ()=>{ listaAtual().push(["",0]); cadAlterado=true; renderFicha(); };
+}
+
+/* ===== PREVISÃO DE COMPRAS ===== */
+$("prev-dias").oninput = renderPrevisao; $("prev-ped").oninput = renderPrevisao;
+function renderPrevisao(){
+  const vendas = G.vendas;
+  const diasComVenda = new Set(vendas.map(v=>v.dia)).size;
+  const consumoMes = {}; vendas.forEach(v=>consumoVenda(v,CAD,consumoMes));
+  const dias = Math.max(1, num($("prev-dias").value)||7);
+  let porPedido, mediaPed;
+  if(vendas.length){
+    mediaPed = vendas.length/diasComVenda;
+    porPedido = Object.fromEntries(Object.entries(consumoMes).map(([k,q])=>[k,q/vendas.length]));
+    $("prev-base").innerHTML = `Baseado nas <b>${vendas.length} vendas</b> deste mês (média de <b>${mediaPed.toFixed(1).replace(".",",")} pedidos por dia</b> em ${diasComVenda} dia(s) com venda). Pode mudar a média pra simular um movimento maior ou menor.`;
+  } else {
+    // sem vendas ainda: simula um pedido típico (2 espetos com Completinho em 1 deles, 1 refri lata)
+    mediaPed = 15;
+    const tipico = { itens:[{id:"coxao",qtd:1,completo:true},{id:"frango",qtd:1},{id:"lata-coca-cola",qtd:1}] };
+    porPedido = consumoVenda(tipico, CAD, {});
+    $("prev-base").innerHTML = `Ainda não há vendas concluídas neste mês, então a previsão usa um <b>pedido típico</b> (2 espetos, 1 Completinho e 1 refri). Quando as vendas entrarem, ela passa a usar o seu movimento real.`;
+  }
+  if(!$("prev-ped").value) $("prev-ped").value = Math.round(mediaPed*10)/10;
+  const ped = Math.max(0, num($("prev-ped").value)||mediaPed);
+  const totalPed = ped*dias;
+  const linhas = Object.entries(porPedido).map(([id,q])=>{ const i=insPorId(id); const qt=q*totalPed; const k=i?.preco!=null ? (qt/((i.un==="kg"||i.un==="L")?1000:1))*i.preco : null; return {i,id,qt,k}; })
+    .filter(x=>x.qt>0).sort((a,b)=>(b.k||0)-(a.k||0));
+  const total = linhas.reduce((s,x)=>s+(x.k||0),0), semPreco = linhas.filter(x=>x.k==null).length;
+  const porCat = {}; linhas.forEach(x=>{ const c=x.i?.cat||"Outros"; (porCat[c] ||= []).push(x); });
+  $("g-prev").innerHTML = `<div class="numeros"><div class="num"><small>Pedidos previstos</small><strong>${Math.round(totalPed)}</strong><em>${ped.toLocaleString("pt-BR")} por dia × ${dias} dia(s)</em></div><div class="num destaque"><small>Valor estimado da compra</small><strong>${brl(total)}</strong><em>${semPreco?`${semPreco} item(ns) sem preço cadastrado`:"todos os itens com preço"}</em></div></div>
+    ${Object.entries(porCat).map(([c,xs])=>`<div class="g-grupo"><h4>${esc(c)} <span class="opc">${brl(xs.reduce((s,x)=>s+(x.k||0),0))}</span></h4><ul class="g-lista">${xs.map(x=>`<li><div><b>${esc(x.i?.nome||x.id)}</b></div><strong>${fmtQ(x.qt, x.i?.un||"un")}</strong><span class="g-c1">${x.k==null?'<span class="pend">sem preço</span>':brl(x.k)}</span></li>`).join("")}</ul></div>`).join("")}
+    <p class="g-ajuda">Dica: compre com uma folga de 10 a 15% (perdas, aparas da carne e pedidos acima da média).</p>`;
+}
 
 /* ---------- início ---------- */
 if(senha){ api("ping").then(entrar).catch(()=>{}); } else { $("senha").focus(); }

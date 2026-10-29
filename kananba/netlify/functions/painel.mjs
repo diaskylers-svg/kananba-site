@@ -71,6 +71,22 @@ export default async (req, context) => {
     const pendentes = (await listarPrefixo("insumo/")).filter((i) => !i.pago && !i.id.startsWith(mes));
     return json({ mes, vendas, insumos, pendentesAntigos: pendentes });
   }
+  /* ---- cadastro: insumos (preço por kg/L/un), preparos e fichas técnicas ---- */
+  if (req.method === "GET" && acao === "cadastro") {
+    return json({ cadastro: (await lojaGestao().get("cadastro", { type: "json" })) || null });
+  }
+  if (req.method === "POST" && acao === "cadastro") {
+    const texto = await req.text();
+    if (texto.length > 400000) return erro("Cadastro grande demais.", 413);
+    let c; try { c = JSON.parse(texto).cadastro; } catch { return erro("Requisição inválida"); }
+    if (!c || !Array.isArray(c.insumos) || typeof c.fichas !== "object" || typeof c.preparos !== "object") return erro("Cadastro inválido");
+    c.insumos = c.insumos.slice(0, 400).map((i) => ({ id: txt(i.id, 60), nome: txt(i.nome, 80), cat: txt(i.cat, 40) || "Outros",
+      un: ["kg", "L", "un"].includes(i.un) ? i.un : "un", preco: i.preco == null || i.preco === "" ? null : centavos(Number(i.preco)) }))
+      .filter((i) => i.id && i.nome);
+    await lojaGestao().setJSON("cadastro", c);
+    return json({ ok: true });
+  }
+
   if (req.method === "POST" && acao === "insumo") {
     let b; try { b = await req.json(); } catch { return erro("Requisição inválida"); }
     const data = /^\d{4}-\d{2}-\d{2}$/.test(b.data || "") ? b.data : diaDeTrabalho();
@@ -81,6 +97,16 @@ export default async (req, context) => {
     const ins = { id, data, descricao, categoria: txt(b.categoria, 30) || "Outros", qtd: txt(b.qtd, 30) || null,
       valor, pago: !!b.pago, vencimento: b.pago ? null : (/^\d{4}-\d{2}-\d{2}$/.test(b.vencimento || "") ? b.vencimento : null),
       fornecedor: txt(b.fornecedor, 60) || null, criadoEm: new Date().toISOString() };
+    // compra ligada a um insumo cadastrado: atualiza o preço por kg/L/un usado no cálculo do custo
+    const qn = Number(String(b.quantidade ?? "").replace(",", "."));
+    if (b.insumoId && qn > 0) {
+      const g = lojaGestao(); const cad = (await g.get("cadastro", { type: "json" })) || null;
+      ins.insumoId = txt(b.insumoId, 60); ins.quantidade = qn;
+      if (cad) {
+        const alvo = cad.insumos.find((x) => x.id === ins.insumoId);
+        if (alvo) { alvo.preco = centavos(valor / qn); await g.setJSON("cadastro", cad); ins.precoUnit = alvo.preco; ins.un = alvo.un; }
+      } else ins.precoPendente = centavos(valor / qn);
+    }
     await lojaGestao().setJSON(`insumo/${id}`, ins);
     return json({ ok: true, insumo: ins });
   }

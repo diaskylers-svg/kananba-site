@@ -68,7 +68,7 @@ export async function registrarVenda(p) {
     id: p.id, codigo: p.codigo, dia, concluidoEm: new Date().toISOString(),
     subtotal: p.subtotal, taxa: p.taxa, total: p.total,
     forma: p.pagamento.forma, modo: p.entrega.modo,
-    itens: p.itens.map((i) => ({ id: i.id, nome: i.nome, qtd: i.qtd, total: i.total }))
+    itens: p.itens.map((i) => ({ id: i.id, nome: i.nome, qtd: i.qtd, total: i.total, completo: !!i.completo, sabores: i.sabores || null, extras: i.extras || null }))
   });
 }
 export async function listarPrefixo(prefixo) {

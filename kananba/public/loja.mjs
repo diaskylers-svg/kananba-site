@@ -52,7 +52,7 @@ const BEBIDAS = [
   { sub: "refris",   secao: "Refrigerante lata 350 ml", id: "lata", preco: 7,  itens: ["Coca-Cola", "Fanta Laranja", "Guaraná", "Pureza"] },
   { sub: "refris",   secao: "Refrigerante 600 ml",      id: "600",  preco: 10, itens: ["Coca-Cola", "Fanta Laranja", "Guaraná", "Pureza"] },
   { sub: "refris",   secao: "Refrigerante 1,5 L",       id: "15",   preco: 15, itens: ["Coca-Cola", "Fanta Laranja", "Guaraná", "Pureza"] },
-  { sub: "sucos",    secao: "Suco",                     id: "suco", preco: 8,  itens: ["Goiaba", "Maracujá", "Manga"] }
+  { sub: "sucos",    secao: "Suco",                     id: "suco", preco: 8,  itens: ["Goiaba", "Maracujá", "Acerola"] }
 ];
 const slug = (t) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-");
 for (const g of BEBIDAS) for (const nome of g.itens) {
