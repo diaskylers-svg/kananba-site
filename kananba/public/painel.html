@@ -75,6 +75,7 @@ input:focus{outline:none;border-color:var(--brasa);box-shadow:0 0 0 3px var(--br
 .vivo.off i{background:var(--perigo)}
 @media (prefers-reduced-motion:no-preference){.vivo i{animation:pisca 2s infinite}@keyframes pisca{50%{opacity:.3}}}
 .som[aria-pressed="false"]{color:var(--texto-3)}
+#tipo-som{background:var(--grelha);color:var(--texto);width:auto;padding:9px 10px;font:inherit;font-weight:600}
 @media (max-width:600px){.topo{position:static}.topo-in{gap:8px}.topo-acoes{width:100%;gap:6px}.topo input[type=date]{flex:1;min-width:0}.vivo{width:100%}.btn-sec{padding:9px 12px}}
 
 main{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
@@ -184,6 +185,12 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
         <span class="vivo" id="vivo"><i></i><span id="vivo-txt">ao vivo</span></span>
         <input type="date" id="dia" aria-label="Dia">
         <button class="btn-sec" id="btn-tema" type="button"></button>
+        <select class="btn-sec" id="tipo-som" aria-label="Som do alarme">
+          <option value="sombrio">🛡 Alarme sombrio</option>
+          <option value="sino">🔔 Sino</option>
+          <option value="proprio">🎵 Escolher arquivo de som…</option>
+        </select>
+        <input type="file" id="arquivo-som" accept="audio/*" hidden>
         <button class="btn-sec som" id="btn-som" type="button" aria-pressed="true" title="Som de novo pedido">🔔 Som</button>
         <button class="btn-sec" id="btn-sair" type="button">Sair</button>
       </div>
@@ -265,8 +272,25 @@ $("btn-sair").onclick = () => sair();
 /* ---------- som de novo pedido ---------- */
 let audio = null;
 function destravarSom(){ try{ audio = audio || new (window.AudioContext||window.webkitAudioContext)(); audio.resume(); }catch(e){} }
-function tocar(){
-  if(!somLigado || !audio) return;
+/* Sons do alarme: "sombrio" (original, grave e pesado), "sino" (o antigo) ou um arquivo seu */
+let tipoSom = ler("kananba-painel-tipo-som") || "sombrio";
+let somProprio = null;
+function nota(t, freq, dur, vol, tipo){
+  const o=audio.createOscillator(), g=audio.createGain(), f=audio.createBiquadFilter();
+  o.type=tipo||"sawtooth"; o.frequency.value=freq; f.type="lowpass"; f.frequency.value=freq*4;
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.03); g.gain.setValueAtTime(vol,t+dur*.7); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(f).connect(g).connect(audio.destination); o.start(t); o.stop(t+dur+.05);
+}
+function tocarSombrio(){
+  // fanfarra grave em tom menor, composta pro KANANBA: metais pesados + tambor
+  const t0=audio.currentTime+.05;
+  const seq=[[0,98,.32],[.36,98,.32],[.72,116.5,.5],[1.3,87.3,.28],[1.6,98,.9]];
+  seq.forEach(([dt,f,d])=>{ nota(t0+dt,f,d,.22); nota(t0+dt,f*2,d,.08); nota(t0+dt,f*1.5,d,.05,"square"); });
+  [0,.36,.72,1.3,1.6].forEach(dt=>{ const o=audio.createOscillator(), g=audio.createGain(); o.type="sine";
+    o.frequency.setValueAtTime(120,t0+dt); o.frequency.exponentialRampToValueAtTime(45,t0+dt+.25);
+    g.gain.setValueAtTime(.5,t0+dt); g.gain.exponentialRampToValueAtTime(0.0001,t0+dt+.3); o.connect(g).connect(audio.destination); o.start(t0+dt); o.stop(t0+dt+.35); });
+}
+function tocarSino(){
   const t0 = audio.currentTime;
   [0, .22, .44, 1.1, 1.32, 1.54].forEach((dt,i) => {
     const o = audio.createOscillator(), g = audio.createGain();
@@ -275,9 +299,36 @@ function tocar(){
     o.connect(g).connect(audio.destination); o.start(t0+dt); o.stop(t0+dt+.2);
   });
 }
+function tocar(){
+  if(!somLigado) return;
+  if(tipoSom==="proprio" && somProprio){ try{ const a=new Audio(somProprio); a.play().catch(()=>{}); return; }catch(e){} }
+  if(!audio) return;
+  tipoSom==="sino" ? tocarSino() : tocarSombrio();
+}
+// guarda o som escolhido pelo dono neste aparelho (IndexedDB, porque arquivo de áudio é grande pro localStorage)
+function bancoSom(){ return new Promise((ok,falha)=>{ try{ const r=indexedDB.open("kananba-painel",1); r.onupgradeneeded=()=>r.result.createObjectStore("som"); r.onsuccess=()=>ok(r.result); r.onerror=()=>falha(r.error); }catch(e){ falha(e); } }); }
+async function lerSomProprio(){ try{ const db=await bancoSom(); return await new Promise(ok=>{ const q=db.transaction("som").objectStore("som").get("alarme"); q.onsuccess=()=>ok(q.result||null); q.onerror=()=>ok(null); }); }catch(e){ return null; } }
+async function salvarSomProprio(dataUrl){ try{ const db=await bancoSom(); await new Promise(ok=>{ const t=db.transaction("som","readwrite"); t.objectStore("som").put(dataUrl,"alarme"); t.oncomplete=ok; t.onerror=ok; }); }catch(e){} }
+lerSomProprio().then(v=>{ somProprio=v; atualizarSeletorSom(); });
+function atualizarSeletorSom(){
+  const sel=$("tipo-som"); if(!sel) return;
+  sel.value = (tipoSom==="proprio" && !somProprio) ? "sombrio" : tipoSom;
+  sel.querySelector('[value="proprio"]').textContent = somProprio ? "🎵 Meu som (arquivo)" : "🎵 Escolher arquivo de som…";
+}
 $("btn-som").setAttribute("aria-pressed", somLigado);
 $("btn-som").onclick = () => { somLigado = !somLigado; guardar("kananba-painel-som", somLigado?"1":"0"); $("btn-som").setAttribute("aria-pressed", somLigado); $("btn-som").textContent = somLigado ? "🔔 Som" : "🔕 Mudo"; destravarSom(); if(somLigado) tocar(); };
 document.addEventListener("pointerdown", destravarSom, {once:true});
+$("tipo-som").onchange = () => {
+  const v=$("tipo-som").value;
+  if(v==="proprio"){ $("arquivo-som").click(); return; }
+  tipoSom=v; guardar("kananba-painel-tipo-som", v); destravarSom(); tocar();
+};
+$("arquivo-som").onchange = () => {
+  const f=$("arquivo-som").files[0]; if(!f){ atualizarSeletorSom(); return; }
+  if(f.size>3*1024*1024){ alert("Arquivo muito grande. Use um som de até 3 MB (um trecho curto de poucos segundos)."); atualizarSeletorSom(); return; }
+  const r=new FileReader(); r.onload=async()=>{ somProprio=r.result; await salvarSomProprio(somProprio); tipoSom="proprio"; guardar("kananba-painel-tipo-som","proprio"); atualizarSeletorSom(); tocar(); };
+  r.readAsDataURL(f);
+};
 
 /* ---------- carregar ---------- */
 $("dia").onchange = () => { diaEscolhido = $("dia").value || null; carregar(); };
