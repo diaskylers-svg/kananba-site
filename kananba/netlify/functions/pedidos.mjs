@@ -1,7 +1,7 @@
 // POST /api/pedidos  → cria o pedido (e o Pix, se for o caso)
 import {
   NEGOCIO, CARDAPIO, COMBOS, json, erro, so, txt, novoId, novoToken, codigoDe, cpfValido, centavos,
-  salvarPedido, marcar, mpConfigurado, mpCriarPix, visaoCliente
+  salvarPedido, marcar, mpConfigurado, mpCriarPix, visaoCliente, listarDia, diaDeTrabalho, filaDe
 } from "../lib/comum.mjs";
 
 export default async (req) => {
@@ -81,6 +81,12 @@ export default async (req) => {
   const pagamento = { forma, status: forma === "Pix" ? "pendente" : "na_entrega" };
   if (forma === "Dinheiro" && b.pagamento?.troco) pagamento.troco = txt(b.pagamento.troco, 20);
 
+  /* ---- um pedido por vez por cliente (evita pedidos duplicados/simultâneos) ---- */
+  let doDia = [];
+  try { doDia = await listarDia(diaDeTrabalho()); } catch {}
+  const emAndamento = doDia.find((p) => p.cliente.cpf === cliente.cpf && ["aguardando_pagamento", "novo", "em_preparo", "saiu", "pronto"].includes(p.status));
+  if (emAndamento) return erro(`Você já tem um pedido em andamento (#${emAndamento.codigo}). Aguarde ele ser concluído ou desista dele antes de fazer outro.`, 409);
+
   const id = novoId();
   const pedido = {
     id, codigo: codigoDe(id), token: novoToken(),
@@ -102,7 +108,9 @@ export default async (req) => {
   }
 
   await salvarPedido(pedido);
-  return json({ ok: true, token: pedido.token, pedido: visaoCliente(pedido) }, 201);
+  const v = visaoCliente(pedido);
+  if (pedido.status === "novo") v.fila = filaDe([...doDia, pedido], pedido);
+  return json({ ok: true, token: pedido.token, pedido: v }, 201);
 };
 
 export const config = { path: "/api/pedidos" };

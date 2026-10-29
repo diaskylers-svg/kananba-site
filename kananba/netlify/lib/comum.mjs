@@ -59,6 +59,22 @@ export async function listarDia(dia) {
   return itens.filter(Boolean).sort((a, b) => b.criadoEm.localeCompare(a.criadoEm));
 }
 
+/* ---------- fila de produção ---------- */
+export const ATIVOS_FILA = ["novo", "em_preparo"];
+// quantos pedidos estão na frente e a previsão em minutos
+export function previsao(naFrente, modo) {
+  const base = NEGOCIO.tempoPreparo + naFrente * NEGOCIO.tempoPorPedidoNaFila + (modo === "Entrega" ? NEGOCIO.tempoEntrega : 0);
+  return { naFrente, min: base, max: base + 10 };
+}
+export function filaDe(lista, pedido) {
+  const ativos = lista.filter((p) => ATIVOS_FILA.includes(p.status)).sort((a, b) => a.criadoEm.localeCompare(b.criadoEm));
+  if (!pedido) return previsao(ativos.length, "Entrega");
+  if (pedido.status === "em_preparo") return { ...previsao(0, pedido.entrega.modo), naFrente: 0, preparando: true };
+  const idx = ativos.findIndex((p) => p.id === pedido.id);
+  const naFrente = idx >= 0 ? idx : ativos.length;
+  return previsao(naFrente, pedido.entrega.modo);
+}
+
 /* ---------- utilidades ---------- */
 export const so = (t) => String(t ?? "").replace(/\D/g, "");
 export const txt = (t, max = 200) => String(t ?? "").replace(/\s+/g, " ").trim().slice(0, max);

@@ -1,5 +1,5 @@
 // GET /api/pedidos/:id?t=TOKEN  → o cliente acompanha o próprio pedido
-import { json, erro, lerPedido, conferirPix, visaoCliente } from "../lib/comum.mjs";
+import { json, erro, lerPedido, conferirPix, visaoCliente, listarDia, filaDe } from "../lib/comum.mjs";
 
 export default async (req, context) => {
   const id = context.params.id;
@@ -7,7 +7,11 @@ export default async (req, context) => {
   const p = await lerPedido(id);
   if (!p || !t || t !== p.token) return erro("Pedido não encontrado", 404);
   await conferirPix(p);
-  return json({ pedido: visaoCliente(p) });
+  const v = visaoCliente(p);
+  if (["novo", "em_preparo"].includes(p.status)) {
+    try { v.fila = filaDe(await listarDia(p.id.slice(0, 10)), p); } catch {}
+  }
+  return json({ pedido: v });
 };
 
 export const config = { path: "/api/pedidos/:id" };

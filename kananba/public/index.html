@@ -502,6 +502,13 @@ body{transition:background-color .25s ease,color .25s ease}
 .sug-sabor span{font-size:12.5px;color:var(--brasa-forte)}
 .sug-sabor:hover{border-color:var(--brasa)}
 .sug-18{margin:8px 0 0;font-size:12.5px;color:var(--texto-3)}
+
+/* Aviso de fila */
+.fila-aviso{display:flex;gap:12px;align-items:flex-start;margin:0 0 14px;padding:12px 14px;border-radius:14px;background:var(--azul-fundo);border:1px solid color-mix(in srgb,var(--azul) 40%,transparent)}
+.fila-aviso[hidden]{display:none}
+.fila-ico{font-size:22px;line-height:1}
+.fila-aviso b{display:block;font-size:16px}
+.fila-aviso small{display:block;color:var(--texto-2);font-size:13.5px;margin-top:2px}
 </style>
 </head><body>
 
@@ -602,6 +609,7 @@ body{transition:background-color .25s ease,color .25s ease}
   <div id="area-pedido">
   <ul class="resumo-lista" id="resumo"></ul>
   <button class="btn-esvaziar" id="btn-esvaziar" type="button">🗑 Esvaziar carrinho</button>
+  <div class="fila-aviso" id="fila-aviso" hidden></div>
   <div class="totalizador" id="totalizador"></div>
   <div class="sugestao" id="sugestao" hidden></div>
 
@@ -891,6 +899,20 @@ function totalTxt(k){
   const taxaNum = pedido.entrega==="Entrega" ? (NEGOCIO.taxaEntrega||0) : 0;
   return { taxaNum, total: k.sub + taxaNum, aConfirmar: k.faltaPreco || (pedido.entrega==="Entrega" && NEGOCIO.taxaEntrega==null) };
 }
+/* ===== Fila: aviso de tempo antes de pedir ===== */
+let FILA = null, filaEm = 0;
+async function carregarFila(){
+  if(Date.now()-filaEm < 20000 && FILA) return renderFila();
+  try{ const r=await fetch("/api/fila",{cache:"no-store"}); if(r.ok){ FILA=await r.json(); filaEm=Date.now(); } }catch(e){}
+  renderFila();
+}
+function renderFila(){
+  const el=$("fila-aviso"); if(!el) return;
+  if(!FILA){ el.hidden=true; return; }
+  const p = pedido.entrega==="Entrega" ? FILA.entrega : FILA.retirada;
+  el.hidden=false;
+  el.innerHTML = `<span class="fila-ico">⏱</span><div><b>${pedido.entrega==="Entrega"?"Chega em":"Fica pronto em"} ${p.min}–${p.max} min</b><small>${FILA.naFila===0?"Sem fila agora: seu pedido vai direto pra brasa.":`${FILA.naFila} ${FILA.naFila===1?"pedido":"pedidos"} na sua frente. Atendemos um por vez, na ordem de chegada.`}</small></div>`;
+}
 function renderTotalizador(){
   const k = calc(), t = totalTxt(k);
   if(!k.n){ $("totalizador").innerHTML=""; return; }
@@ -1111,6 +1133,7 @@ function renderCheckout(){
   opcoes($("op-entrega"), ent, pedido.entrega, v=>{pedido.entrega=v; renderCheckout(); atualizarBarra();});
   renderTotalizador();
   renderSugestao();
+  carregarFila();
   $("op-entrega").hidden = ent.length<2;
   renderEtapas();
   atualizarWhats();
@@ -1194,6 +1217,10 @@ function renderAcomp(){
   const p = acomp.dados, pg = p.pagamento, ent = p.entrega;
   const esperandoPix = p.status==="aguardando_pagamento" && pg.status==="pendente";
   let h = `<div class="acomp-status s-${p.status}"><span class="acomp-pill">${ROT_STATUS[p.status]||p.status}</span></div>`;
+  if(p.fila && (p.status==="novo"||p.status==="em_preparo")){
+    const f=p.fila, alvo=p.entrega.modo==="Entrega"?"Chega em":"Fica pronto em";
+    h += `<div class="fila-aviso"><span class="fila-ico">${p.status==="novo"?"🧾":"🔥"}</span><div><b>${p.status==="novo" ? (f.naFrente===0?"Você é o próximo da fila!":`Você está na fila: ${f.naFrente+1}º lugar`) : "Seu pedido está na brasa!"}</b><small>${alvo} aproximadamente ${f.min}–${f.max} min. A gente prepara um pedido por vez, na ordem de chegada.</small></div></div>`;
+  }
 
   if(pagoAgora) h += `<div class="acomp-ok">✓ Pagamento confirmado! Seu pedido já foi para a brasa.</div>`;
 

@@ -16,7 +16,11 @@ export const NEGOCIO = {
   fecha: 30,                   // 0h30
   retirada: true,
   pagamentos: ["Pix", "Cartão na entrega", "Dinheiro"],
-  pixExpiraMin: 30             // tempo para o cliente pagar o Pix
+  pixExpiraMin: 30,            // tempo para o cliente pagar o Pix
+  // Tempo estimado mostrado ao cliente (em minutos)
+  tempoPreparo: 25,            // preparo de um pedido na brasa
+  tempoPorPedidoNaFila: 10,    // cada pedido na frente soma esse tempo
+  tempoEntrega: 20             // deslocamento do entregador
 };
 
 // preco = só o espeto · precoCompleto = Completinho (espeto + baião, vinagrete e farofa)

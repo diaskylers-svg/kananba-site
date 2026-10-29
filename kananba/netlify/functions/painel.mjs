@@ -37,6 +37,11 @@ export default async (req, context) => {
     if (!p) return erro("Pedido não encontrado", 404);
     if (!(PROXIMOS[p.status] || []).includes(b.status)) return erro(`Não dá para ir de "${p.status}" para "${b.status}".`, 409);
     if (b.status === "em_preparo" && p.pagamento.status === "pendente") return erro("Esse Pix ainda não foi pago.", 409);
+    if (b.status === "em_preparo") {
+      // fila: só libera o pedido mais antigo que está esperando
+      const antes = (await listarDia(p.id.slice(0, 10))).filter((x) => x.status === "novo" && x.id !== p.id && x.criadoEm < p.criadoEm);
+      if (antes.length) return erro(`Siga a fila: libere antes o pedido #${antes.sort((a, z) => a.criadoEm.localeCompare(z.criadoEm))[0].codigo}.`, 409);
+    }
     p.status = b.status;
     marcar(p, b.status);
     await salvarPedido(p);
