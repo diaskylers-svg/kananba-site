@@ -11,5 +11,6 @@
 |---|---|
 | `MP_ACCESS_TOKEN` | Access Token do Mercado Pago (teste ou produção). Nunca compartilhe. |
 | `PAINEL_SENHA` | Senha para entrar em kananba.com.br/painel |
+| `MP_PUBLIC_KEY` | Public Key do Mercado Pago (mesma tela do Access Token). Liga o pagamento com cartão de crédito no site. Sem ela, a opção não aparece. |
 
 Depois de mudar uma variável, faça um novo deploy (Implanta → Trigger deploy).

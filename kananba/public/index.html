@@ -344,7 +344,9 @@ const SECOES = [
   {id:"acomp", nome:"Acompanhamentos", nota:"Porções avulsas."},
   {id:"bebidas", nome:"Bebidas", nota:"Geladas."}
 ];
-let FOTOS = {}, DESTAQUES = {fonte:"casa", ids:{}}, FILA = null;
+let FOTOS = {}, DESTAQUES = {fonte:"casa", ids:{}}, FILA = null, CFG = {cartao:false, publicKey:null};
+const CARTAO = "Cartão de crédito";
+const formasPag = ()=> NEGOCIO.pagamentos.filter(p=>p!==CARTAO || CFG.cartao);
 
 /* ============ desenhos (quando não há foto) ============ */
 const CORES = {coxao:['#a0461c','#8a3a16'], alcatra:['#8a3418','#a0461c'], paleta:['#6e2a10','#8a3a16'], misto:['#a0461c','#e8b26a'], frango:['#e8b26a','#d99c4f'],
@@ -477,7 +479,7 @@ function abrirPainel(titulo, corpo="", pe=""){
   $("fundo").hidden=false; $("painel").hidden=false; $("p-corpo").scrollTop=0;
   document.body.style.overflow="hidden"; aoFechar=null;
 }
-function fecharPainel(){ $("fundo").hidden=true; $("painel").hidden=true; document.body.style.overflow=""; clearInterval(timerRelogio); const f=aoFechar; aoFechar=null; if(f) f(); }
+function fecharPainel(){ desmontarBrick(); brickChave=null; $("fundo").hidden=true; $("painel").hidden=true; document.body.style.overflow=""; clearInterval(timerRelogio); const f=aoFechar; aoFechar=null; if(f) f(); }
 $("fundo").onclick=fecharPainel; $("p-fechar").onclick=fecharPainel;
 document.addEventListener("keydown",e=>{ if(e.key==="Escape" && !$("painel").hidden) fecharPainel(); });
 const passoHTML=(id,v,min=0,max=50)=>`<div class="passo"><button type="button" data-p="${id}" data-d="-1" ${v<=min?"disabled":""} aria-label="Menos">−</button><span>${v}</span><button type="button" data-p="${id}" data-d="1" ${v>=max?"disabled":""} aria-label="Mais">+</button></div>`;
@@ -629,13 +631,13 @@ function abrirCheckout(erroMsg, etapa){
     c += `<div class="resumo-etapa"><div><small>Seus dados</small>${esc(cli.nome)} · ${esc(cli.tel)}</div><button class="lk lk-edit" type="button" data-etapa="0">Alterar</button></div>
       <div class="resumo-etapa"><div><small>${cli.modo==="Entrega"?"Entrega em":"Recebimento"}</small>${esc(endTxt)}</div><button class="lk lk-edit" type="button" data-etapa="1">Alterar</button></div>
       <div class="grupo"><div class="grupo-cab"><div><b>Pagamento</b><small>Escolha 1 opção</small></div><span class="obrig ${cli.pag?"ok":""}">Obrigatório</span></div>
-      ${NEGOCIO.pagamentos.map(p=>`<label class="opcao"><input type="radio" name="pag" value="${esc(p)}" ${cli.pag===p?"checked":""}><span class="o-txt">${esc(p)}${p==="Pix"?"<small>Pague agora pelo site, com QR Code ou Copia e Cola</small>":`<small>Paga na ${cli.modo==="Entrega"?"entrega":"retirada"}</small>`}</span></label>`).join("")}
+      ${formasPag().map(p=>`<label class="opcao"><input type="radio" name="pag" value="${esc(p)}" ${cli.pag===p?"checked":""}><span class="o-txt">${esc(p)}${p==="Pix"?"<small>Pague agora pelo site, com QR Code ou Copia e Cola</small>":p===CARTAO?"<small>Pague agora pelo site, à vista. Dados protegidos pelo Mercado Pago</small>":`<small>Paga na ${cli.modo==="Entrega"?"entrega":"retirada"}</small>`}</span></label>`).join("")}
       ${cli.pag==="Dinheiro"?campo("f-troco","Troco para quanto? (opcional)",cli.troco,'inputmode="decimal" placeholder="Ex.: 100"'):""}</div>
       <div class="totais"><div><span>Subtotal</span><span>${brl(sub)}</span></div><div><span>Taxa de entrega</span><span>${cli.modo==="Entrega"?(NEGOCIO.taxaEntrega==null?"a combinar":brl(taxa)):"Grátis"}</span></div><div class="t-final"><span>Total</span><span class="preco">${brl(sub+taxa)}</span></div></div>`;
   }
   if(erroMsg) c += `<div class="erro" id="f-erro">${esc(erroMsg)}</div>`;
   const final = ckEtapa===2;
-  abrirPainel("Finalizar pedido", c, `<button class="btn btn-s" type="button" id="ck-voltar">Voltar</button><button class="btn btn-p" type="button" id="ck-enviar">${final?(cli.pag==="Pix"?"Gerar Pix":"Fazer pedido")+` <span class="preco">${brl(sub+taxa)}</span>`:ckEtapa===1?"Ir para o pagamento":"Continuar"}</button>`);
+  abrirPainel("Finalizar pedido", c, `<button class="btn btn-s" type="button" id="ck-voltar">Voltar</button><button class="btn btn-p" type="button" id="ck-enviar">${final?(cli.pag==="Pix"?"Gerar Pix":cli.pag===CARTAO?"Pagar com cartão":"Fazer pedido")+` <span class="preco">${brl(sub+taxa)}</span>`:ckEtapa===1?"Ir para o pagamento":"Continuar"}</button>`);
   if(erroMsg) setTimeout(()=>$("f-erro")?.scrollIntoView({block:"center",behavior:"smooth"}),50);
   const repinta=()=>{ lerForm(); guardarCliente(); manterRolagem(()=>abrirCheckout()); };
   $("p-corpo").querySelectorAll("[data-etapa]").forEach(b=>b.onclick=()=>{ lerForm(); guardarCliente(); const i=+b.dataset.etapa; if(i>ckEtapa && !libera(i)) return; abrirCheckout(null,i); });
@@ -675,13 +677,13 @@ function faltaEtapa(e){
   const f=[];
   if(e===0){ if(cli.nome.length<2) f.push(["f-nome","seu nome"]); if(!cpfValido(cli.cpf)) f.push(["f-cpf", so(cli.cpf).length?"um CPF válido":"seu CPF"]); if(so(cli.tel).length<10) f.push(["f-tel","um celular com DDD"]); }
   if(e===1 && cli.modo==="Entrega"){ if(!cli.rua) f.push(["f-rua","a rua"]); if(!cli.numero && !cli.semNumero) f.push(["f-num","o número"]); if(!cli.bairro) f.push(["f-bairro","o bairro"]); }
-  if(e===2 && !cli.pag) f.push([null,"a forma de pagamento"]);
+  if(e===2 && (!cli.pag || !formasPag().includes(cli.pag))) f.push([null,"a forma de pagamento"]);
   return f;
 }
 async function enviarPedido(){
   lerForm(); guardarCliente();
   for(const e of [0,1,2]){ const f=faltaEtapa(e); if(f.length){ ckEtapa=e; mostrarFaltas(f); return; } }
-  const b=$("ck-enviar"); b.disabled=true; b.textContent = cli.pag==="Pix"?"Gerando seu Pix…":"Enviando pedido…";
+  const b=$("ck-enviar"); b.disabled=true; b.textContent = cli.pag==="Pix"?"Gerando seu Pix…":cli.pag===CARTAO?"Preparando o pagamento…":"Enviando pedido…";
   const itens=[];
   for(const l of sacola){
     if(l.combo){ for(let k=0;k<l.qtd;k++) itens.push({id:l.id, qtd:1, sabores:l.sabores, extras:l.extras, obs:l.obs||null}); }
@@ -751,7 +753,7 @@ function pintarPedidos(){
       <div class="ped-topo"><div><div class="ped-cod">Pedido #${esc(p.codigo)}</div><div class="ped-quando">${quando(p.criadoEm)} · ${p.entrega.modo==="Entrega"?"Entrega":"Retirada"}</div></div><span class="pill s-${p.status}">${ROT[p.status]||p.status}</span></div>
       ${etapasHTML(p)}
       <div class="ped-itens">${p.itens.map(i=>`${i.qtd}× ${esc(i.nome)}`).join(" · ")}</div>
-      <div class="ped-base"><span class="ped-ver">${p.status==="aguardando_pagamento"?"Pagar com Pix →":"Ver detalhes →"}</span><span class="preco">${brl(p.total)}</span></div></button>`; }).join("")
+      <div class="ped-base"><span class="ped-ver">${p.status==="aguardando_pagamento"?(p.pagamento.forma===CARTAO?"Pagar com cartão →":"Pagar com Pix →"):"Ver detalhes →"}</span><span class="preco">${brl(p.total)}</span></div></button>`; }).join("")
     : `<div class="vazio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>${abaPed==="and"?"Nenhum pedido em andamento.":"Nenhum pedido finalizado ainda."}${abaPed==="and"?`<button class="btn btn-p" type="button" id="ir-cardapio" style="flex:none">Ver cardápio</button>`:""}</div>`;
   $("lista-ped").querySelectorAll("[data-ped]").forEach(b=>b.onclick=()=>abrirDetalhe(b.dataset.ped));
   $("ir-cardapio")?.addEventListener("click",()=>mostrar("inicio"));
@@ -761,12 +763,19 @@ function abrirDetalhe(id){
   detalheId=id; abrirPainel("Pedido"); aoFechar=()=>{ detalheId=null; };
   pintarDetalhe(); agendarPoll();
 }
+let brickChave=null, brickCtrl=null;
 function pintarDetalhe(){
   const m = meus.find(x=>x.id===detalheId); if(!m?.dados){ fecharPainel(); return; }
-  const p=m.dados, pg=p.pagamento, ent=p.entrega, esperandoPix = p.status==="aguardando_pagamento" && pg.status==="pendente";
+  const p=m.dados, pg=p.pagamento, ent=p.entrega;
+  const esperandoCartao = p.status==="aguardando_pagamento" && pg.forma===CARTAO && ["pendente","recusado"].includes(pg.status);
+  const esperandoPix = p.status==="aguardando_pagamento" && pg.forma==="Pix" && pg.status==="pendente";
+  // não refaz a tela enquanto o cliente digita o cartão (a não ser que algo tenha mudado)
+  const chave = esperandoCartao ? `${p.id}|${pg.status}|${pg.motivo||""}` : null;
+  if(chave && chave===brickChave && $("cartao-brick")) return;
+  desmontarBrick(); brickChave = chave;
   $("p-titulo").textContent=`Pedido #${p.codigo}`;
   let h=`<div class="ped-topo"><div class="ped-quando">${quando(p.criadoEm)}</div><span class="pill s-${p.status}">${ROT[p.status]||p.status}</span></div>`;
-  if(pagoAgora===p.id) h+=`<div class="ok-box">✓ Pagamento confirmado! Seu pedido entrou na fila da brasa.</div>`;
+  if(pagoAgora===p.id) h+=`<div class="ok-box">✓ Pagamento aprovado! Seu pedido entrou na fila da brasa.</div>`;
   if(p.fila && ["novo","em_preparo"].includes(p.status)){
     const f=p.fila, alvo=ent.modo==="Entrega"?"Chega em":"Fica pronto em";
     h+=`<div class="fila"><span>${p.status==="novo"?"🧾":"🔥"}</span><div><b>${p.status==="novo"?(f.naFrente===0?"Você é o próximo da fila!":`Você está na fila: ${f.naFrente+1}º lugar`):"Seu pedido está na brasa!"}</b><small>${alvo} aproximadamente ${f.min}–${f.max} min.</small></div></div>`;
@@ -779,9 +788,15 @@ function pintarDetalhe(){
       <button class="btn btn-p" id="pix-copiar" type="button" style="width:100%">Copiar código Pix</button>
       <p style="margin:0;color:var(--texto-2);font-size:14px"><span class="giro" aria-hidden="true"></span> Aguardando o pagamento… esta tela atualiza sozinha.</p></div>`;
   }
+  if(esperandoCartao){
+    h+=`<div class="pix" style="justify-items:stretch;text-align:left"><div class="pix-topo"><div><small>Total a pagar no cartão</small><strong>${brl(p.total)}</strong></div><div class="pix-relogio" id="pix-relogio"></div></div>
+      ${pg.status==="recusado"?`<div class="erro">${esc(pg.motivo||"O cartão foi recusado.")} Você pode tentar de novo.</div>`:""}
+      <div id="cartao-brick"><p style="margin:0;color:var(--texto-2)"><span class="giro" aria-hidden="true"></span> Carregando o pagamento seguro…</p></div>
+      <p style="margin:0;color:var(--texto-3);font-size:13px">🔒 Os dados do cartão vão direto para o Mercado Pago. A KANANBA não vê nem guarda o número do seu cartão.</p></div>`;
+  }
   if(p.status==="cancelado") h+=`<div class="aviso">${p.canceladoPor==="cliente"?"Você desistiu deste pedido e ele foi cancelado. Nada foi cobrado.":pg.status==="expirado"?"O tempo para pagar o Pix acabou e o pedido foi cancelado. É só fazer de novo.":"Este pedido foi cancelado. Qualquer dúvida, fale com a gente pelo WhatsApp."}</div>`;
   else h+=etapasHTML(p);
-  const pagTxt = pg.forma==="Pix" ? (pg.status==="pago"?"Pix · pago ✓":pg.status==="pendente"?"Pix · aguardando":"Pix · "+pg.status) : `${pg.forma} · paga na ${ent.modo==="Entrega"?"entrega":"retirada"}${pg.troco?` (troco p/ R$ ${esc(pg.troco)})`:""}`;
+  const pagTxt = pg.forma==="Pix"||pg.forma===CARTAO ? `${pg.forma} · ${pg.status==="pago"?"pago ✓":pg.status==="pendente"?"aguardando":pg.status==="recusado"?"recusado, tente de novo":pg.status}` : `${pg.forma} · paga na ${ent.modo==="Entrega"?"entrega":"retirada"}${pg.troco?` (troco p/ R$ ${esc(pg.troco)})`:""}`;
   h+=`<div class="rev">
     <div><small>Itens</small>${p.itens.map(i=>`<div>${i.qtd}× ${esc(i.nome)}${i.detalhe?`<div class="si-det">${esc(i.detalhe)}</div>`:""}${i.ponto||i.obs?`<div class="si-obs">⚠ ${esc([i.ponto,i.obs].filter(Boolean).join(" · "))}</div>`:""}</div>`).join("")}</div>
     <div><small>${ent.modo==="Entrega"?"Entrega em":"Recebimento"}</small>${ent.modo==="Entrega"?esc(`${ent.rua}, ${ent.numero}${ent.complemento?" — "+ent.complemento:""} · ${ent.bairro}`):"Retirada no local"}</div>
@@ -793,6 +808,50 @@ function pintarDetalhe(){
   $("d-desistir")?.addEventListener("click", ()=>confirmarDesistir(m));
   $("d-ok").onclick=()=>{ fecharPainel(); mostrar("inicio"); };
   relogioPix(pg.expiraEm);
+  if(esperandoCartao) montarBrick(m);
+}
+function desmontarBrick(){ try{ brickCtrl?.unmount(); }catch(e){} brickCtrl=null; }
+function sdkMP(){
+  if(window.MercadoPago) return Promise.resolve();
+  if(!sdkMP.p) sdkMP.p = new Promise((ok,falha)=>{ const s=document.createElement("script"); s.src="https://sdk.mercadopago.com/js/v2"; s.onload=ok; s.onerror=()=>{ sdkMP.p=null; falha(new Error("sdk")); }; document.head.appendChild(s); });
+  return sdkMP.p;
+}
+async function montarBrick(m){
+  if(!CFG.publicKey){ await carregarConfig(); }
+  if(!$("cartao-brick") || detalheId!==m.id) return;
+  if(!CFG.publicKey){ $("cartao-brick").innerHTML=`<div class="erro">O pagamento com cartão está indisponível agora. Desista deste pedido e faça de novo com Pix ou cartão na entrega.</div>`; return; }
+  try{ await sdkMP(); }catch(e){ if($("cartao-brick")){ $("cartao-brick").innerHTML=`<div class="erro">Não deu para carregar o pagamento. Confira sua internet.</div><button class="btn btn-s" type="button" id="brick-retry" style="margin-top:8px;width:100%">Tentar de novo</button>`; $("brick-retry").onclick=()=>{ brickChave=null; pintarDetalhe(); }; } return; }
+  if(!$("cartao-brick") || detalheId!==m.id) return;
+  $("cartao-brick").innerHTML="";
+  const escuro = document.documentElement.getAttribute("data-theme")!=="light";
+  const mp = new window.MercadoPago(CFG.publicKey, {locale:"pt-BR"});
+  try{
+    brickCtrl = await mp.bricks().create("cardPayment", "cartao-brick", {
+      initialization:{ amount:m.dados.total },
+      customization:{
+        paymentMethods:{ maxInstallments:1, types:{ excluded:["debit_card"] } },
+        visual:{ style:{ theme: escuro?"dark":"default", customVariables:{ baseColor:"#ff9800", buttonTextColor:"#22160a", formBackgroundColor: escuro?"#161d27":"#F5F7F8", borderRadiusMedium:"12px", borderRadiusLarge:"14px" } },
+                 texts:{ formSubmit:`Pagar ${brl(m.dados.total)}` } }
+      },
+      callbacks:{
+        onReady:()=>{},
+        onError:(e)=>{ console.warn("brick", e); },
+        onSubmit:(dados)=> pagarCartao(m, dados)
+      }
+    });
+  }catch(e){ if($("cartao-brick")) $("cartao-brick").innerHTML=`<div class="erro">Não deu para abrir o pagamento com cartão agora. Tente de novo em instantes.</div>`; }
+}
+async function pagarCartao(m, dados){
+  try{
+    const r=await fetch(`/api/pedidos/${encodeURIComponent(m.id)}/cartao?t=${encodeURIComponent(m.token)}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(dados)});
+    const d=await r.json().catch(()=>({}));
+    if(d.pedido){
+      const pagou = m.dados.pagamento.status!=="pago" && d.pedido.pagamento.status==="pago";
+      m.dados=d.pedido; salvarMeus(); pintarBadge();
+      if(pagou){ pagoAgora=m.id; try{navigator.vibrate&&navigator.vibrate([120,60,120]);}catch(e){} }
+    } else if(!r.ok) toast(d.erro||"Não foi possível pagar agora.");
+  }catch(e){ toast("Sem conexão. Tente de novo."); }
+  brickChave=null; setTimeout(()=>{ if(detalheId===m.id) pintarDetalhe(); if(!$("v-pedidos").hidden) pintarPedidos(); },0);
 }
 async function copiarPix(){
   const m=meus.find(x=>x.id===detalheId), cod=m?.dados?.pagamento?.qr||"", b=$("pix-copiar");
@@ -857,6 +916,7 @@ function pintarTema(){ const claro=document.documentElement.getAttribute("data-t
 $("b-tema").onclick=()=>{ const t=document.documentElement.getAttribute("data-theme")==="light"?"dark":"light"; document.documentElement.setAttribute("data-theme",t); try{localStorage.setItem("kananba-tema",t);}catch(e){} pintarTema(); };
 
 /* ============ dados do servidor ============ */
+async function carregarConfig(){ try{ const r=await fetch("/api/config"); if(!r.ok) return; CFG=await r.json(); }catch(e){} }
 async function carregarFotos(){ try{ const r=await fetch("/api/fotos"); if(!r.ok) return; FOTOS=(await r.json()).fotos||{}; if(Object.keys(FOTOS).length) pintarCardapio(); }catch(e){} }
 async function carregarDestaques(){ try{ const r=await fetch("/api/destaques"); if(!r.ok) return; DESTAQUES=await r.json(); pintarCardapio(); }catch(e){} }
 async function carregarFila(){
@@ -870,7 +930,8 @@ async function carregarFila(){
 /* ============ início ============ */
 $("info-hora").textContent = `das ${NEGOCIO.horario.replace(" às "," à ")}`;
 $("info-taxa").textContent = NEGOCIO.taxaEntrega==null ? "Taxa a combinar" : `Taxa fixa de ${brl(NEGOCIO.taxaEntrega)}${NEGOCIO.retirada?" ou retirada no local":""}`;
-$("info-pag").textContent = NEGOCIO.pagamentos.join(", ");
+$("info-pag").textContent = NEGOCIO.pagamentos.filter(p=>p!==CARTAO).join(", ");
+carregarConfig().then(()=>{ $("info-pag").textContent = formasPag().join(", "); });
 $("info-whats").href = `https://wa.me/${NEGOCIO.whatsapp}`;
 pintarTema(); pintarStatus(); setInterval(pintarStatus,30000);
 pintarAbas(); pintarCardapio(); pintarSacola(); marcarAba(); pintarBadge();

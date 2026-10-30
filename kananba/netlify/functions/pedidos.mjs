@@ -1,7 +1,7 @@
 // POST /api/pedidos  → cria o pedido (e o Pix, se for o caso)
 import {
   NEGOCIO, CARDAPIO, COMBOS, json, erro, so, txt, novoId, novoToken, codigoDe, cpfValido, centavos,
-  salvarPedido, marcar, mpConfigurado, mpCriarPix, visaoCliente, listarDia, diaDeTrabalho, filaDe
+  salvarPedido, marcar, mpConfigurado, mpCriarPix, cartaoConfigurado, ONLINE, visaoCliente, listarDia, diaDeTrabalho, filaDe
 } from "../lib/comum.mjs";
 
 export default async (req) => {
@@ -78,7 +78,9 @@ export default async (req) => {
   const taxa = modo === "Entrega" ? (NEGOCIO.taxaEntrega ?? 0) : 0;
   const subtotal = centavos(itens.reduce((s, i) => s + i.total, 0));
   const total = centavos(subtotal + taxa);
-  const pagamento = { forma, status: forma === "Pix" ? "pendente" : "na_entrega" };
+  if (forma === "Cartão de crédito" && !cartaoConfigurado()) return erro("O pagamento com cartão pelo site ainda não está disponível. Escolha outra forma de pagamento.", 503);
+  const pagamento = { forma, status: ONLINE.includes(forma) ? "pendente" : "na_entrega" };
+  if (forma === "Cartão de crédito") pagamento.expiraEm = new Date(Date.now() + NEGOCIO.pixExpiraMin * 60e3).toISOString();
   if (forma === "Dinheiro" && b.pagamento?.troco) pagamento.troco = txt(b.pagamento.troco, 20);
 
   /* ---- um pedido por vez por cliente (evita pedidos duplicados/simultâneos) ---- */
@@ -91,7 +93,7 @@ export default async (req) => {
   const pedido = {
     id, codigo: codigoDe(id), token: novoToken(),
     criadoEm: new Date().toISOString(),
-    status: forma === "Pix" ? "aguardando_pagamento" : "novo",
+    status: ONLINE.includes(forma) ? "aguardando_pagamento" : "novo",
     cliente, entrega, itens, obsGeral: txt(b.obsGeral, 400) || null,
     subtotal, taxa, total, pagamento, historico: []
   };

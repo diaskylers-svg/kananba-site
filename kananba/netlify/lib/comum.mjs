@@ -123,6 +123,62 @@ export const centavos = (v) => Math.round(v * 100) / 100;
 const MP_API = () => Netlify.env.get("MP_API_BASE") || "https://api.mercadopago.com";
 const mpToken = () => Netlify.env.get("MP_ACCESS_TOKEN");
 export const mpConfigurado = () => !!mpToken();
+// Public Key tem formato APP_USR-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx. Se colarem o Access Token (secreto) aqui por engano, ignoramos.
+export const mpPublicKey = () => {
+  const k = (Netlify.env.get("MP_PUBLIC_KEY") || "").trim();
+  const formato = /^(APP_USR|TEST)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(k);
+  if (!formato || k === mpToken()) { if (k) console.error("MP_PUBLIC_KEY inválida: confira se não é o Access Token"); return ""; }
+  return k;
+};
+export const cartaoConfigurado = () => mpConfigurado() && !!mpPublicKey();
+// formas pagas no próprio site (o pedido espera o pagamento antes de entrar na fila)
+export const ONLINE = ["Pix", "Cartão de crédito"];
+
+/* Cobra o cartão (token gerado pelo formulário seguro do Mercado Pago; o número do cartão nunca passa por aqui) */
+export async function mpCobrarCartao(pedido, dados, urlBase) {
+  const tentativa = (pedido.pagamento.tentativas || 0) + 1;
+  const corpo = {
+    transaction_amount: pedido.total,             // valor sempre do servidor
+    token: dados.token,
+    description: `Pedido ${NEGOCIO.nome} #${pedido.codigo}`,
+    installments: 1,
+    payment_method_id: dados.payment_method_id,
+    external_reference: pedido.id,
+    binary_mode: true,                            // aprovado ou recusado na hora, sem "em análise"
+    statement_descriptor: "KANANBA",
+    payer: {
+      email: dados.email || `pedido-${pedido.codigo.toLowerCase()}@kananba.com.br`,
+      identification: { type: dados.docTipo || "CPF", number: so(dados.docNumero) || so(pedido.cliente.cpf) }
+    }
+  };
+  if (dados.issuer_id) corpo.issuer_id = String(dados.issuer_id);
+  if (urlBase.startsWith("https://")) corpo.notification_url = `${urlBase}/api/mp-webhook`;
+  const r = await fetch(`${MP_API()}/v1/payments`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${mpToken()}`, "Content-Type": "application/json", "X-Idempotency-Key": `${pedido.id}-c${tentativa}` },
+    body: JSON.stringify(corpo)
+  });
+  const d = await r.json().catch(() => ({}));
+  pedido.pagamento.tentativas = tentativa;
+  if (!r.ok) {
+    console.error("Mercado Pago recusou a cobrança no cartão", r.status, JSON.stringify(d));
+    return { status: "rejected", status_detail: "erro_api" };
+  }
+  return d;
+}
+const MOTIVOS = {
+  cc_rejected_insufficient_amount: "Saldo ou limite insuficiente.",
+  cc_rejected_bad_filled_security_code: "Código de segurança (CVV) incorreto.",
+  cc_rejected_bad_filled_date: "Data de validade incorreta.",
+  cc_rejected_bad_filled_card_number: "Número do cartão incorreto.",
+  cc_rejected_bad_filled_other: "Algum dado do cartão está incorreto.",
+  cc_rejected_call_for_authorize: "O banco pediu autorização. Ligue para o seu banco e tente de novo.",
+  cc_rejected_card_disabled: "Cartão bloqueado ou não ativado. Fale com o seu banco.",
+  cc_rejected_duplicated_payment: "Pagamento repetido. Confira se já não foi cobrado.",
+  cc_rejected_high_risk: "Pagamento recusado por segurança. Tente outro cartão ou o Pix.",
+  cc_rejected_max_attempts: "Muitas tentativas com esse cartão. Use outro cartão ou o Pix."
+};
+export const motivoRecusa = (det) => MOTIVOS[det] || "O cartão foi recusado. Confira os dados, tente outro cartão ou pague com Pix.";
 
 export async function mpCriarPix(pedido, urlBase) {
   const expira = new Date(Date.now() + NEGOCIO.pixExpiraMin * 60e3);
@@ -187,7 +243,8 @@ export function podeDesistir(p) {
 
 /* Atualiza o pedido com o que o Mercado Pago diz sobre o pagamento. Retorna true se mudou. */
 export function aplicarPagamento(pedido, pg) {
-  if (!pedido || pedido.pagamento.forma !== "Pix") return false;
+  if (!pedido || !ONLINE.includes(pedido.pagamento.forma)) return false;
+  const cartao = pedido.pagamento.forma === "Cartão de crédito";
   if (String(pg.id) !== String(pedido.pagamento.mpId) && pg.external_reference !== pedido.id) return false;
   const antes = pedido.pagamento.status;
   if (pg.status === "approved") {
@@ -195,6 +252,10 @@ export function aplicarPagamento(pedido, pg) {
     pedido.pagamento.pagoEm = pg.date_approved || new Date().toISOString();
     pedido.pagamento.valorPago = pg.transaction_amount;
     if (pedido.status === "aguardando_pagamento") { pedido.status = "novo"; marcar(pedido, "novo"); }
+  } else if (cartao && pg.status === "rejected" && pedido.pagamento.status !== "pago") {
+    // cartão recusado: o pedido continua esperando, o cliente pode tentar outro cartão
+    pedido.pagamento.status = "recusado";
+    pedido.pagamento.motivo = motivoRecusa(pg.status_detail);
   } else if (["cancelled", "rejected", "refunded", "charged_back"].includes(pg.status)) {
     if (pedido.pagamento.status !== "pago") {
       pedido.pagamento.status = pg.status_detail === "expired" ? "expirado" : "cancelado";
@@ -208,10 +269,12 @@ export function aplicarPagamento(pedido, pg) {
 
 /* Se o Pix ainda está pendente, pergunta ao Mercado Pago (backup caso o aviso automático atrase) */
 export async function conferirPix(pedido) {
-  if (pedido?.pagamento?.forma !== "Pix" || pedido.pagamento.status !== "pendente" || !mpConfigurado()) return false;
+  if (!ONLINE.includes(pedido?.pagamento?.forma) || !["pendente", "recusado"].includes(pedido.pagamento.status) || !mpConfigurado()) return false;
   try {
-    const pg = await mpConsultar(pedido.pagamento.mpId);
-    if (aplicarPagamento(pedido, pg)) { await salvarPedido(pedido); return true; }
+    if (pedido.pagamento.mpId && pedido.pagamento.status === "pendente") {
+      const pg = await mpConsultar(pedido.pagamento.mpId);
+      if (aplicarPagamento(pedido, pg)) { await salvarPedido(pedido); return true; }
+    }
     // o Mercado Pago às vezes demora para marcar como expirado: a gente marca depois do prazo + 10 min
     if (pedido.pagamento.expiraEm && Date.now() > new Date(pedido.pagamento.expiraEm).getTime() + 10 * 60e3) {
       pedido.pagamento.status = "expirado";
@@ -244,6 +307,7 @@ export function visaoCliente(p) {
       forma: p.pagamento.forma, status: p.pagamento.status, troco: p.pagamento.troco || null,
       qr: p.pagamento.status === "pendente" ? p.pagamento.qr : null,
       qrImg: p.pagamento.status === "pendente" ? p.pagamento.qrImg : null,
+      motivo: p.pagamento.status === "recusado" ? p.pagamento.motivo || null : null,
       expiraEm: p.pagamento.expiraEm || null
     },
     historico: p.historico,

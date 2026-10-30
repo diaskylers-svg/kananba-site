@@ -15,7 +15,7 @@ export const NEGOCIO = {
   abre: 17 * 60 + 30,          // minutos do dia (17h30)
   fecha: 30,                   // 0h30
   retirada: true,
-  pagamentos: ["Pix", "Cartão na entrega", "Dinheiro"],
+  pagamentos: ["Pix", "Cartão de crédito", "Cartão na entrega", "Dinheiro"], // "Cartão de crédito" = pago no site (só aparece com MP_PUBLIC_KEY configurada)
   pixExpiraMin: 30,            // tempo para o cliente pagar o Pix
   // Tempo estimado mostrado ao cliente (em minutos)
   tempoPreparo: 25,            // preparo de um pedido na brasa

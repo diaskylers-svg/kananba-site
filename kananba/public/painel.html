@@ -382,7 +382,7 @@ const ABAS = [
   {id:"novos",     rot:"Novos",          f:p => p.status==="novo", chama:true},
   {id:"preparo",   rot:"Na brasa",       f:p => p.status==="em_preparo"},
   {id:"rua",       rot:"Na rua / Prontos", f:p => p.status==="saiu" || p.status==="pronto"},
-  {id:"pix",       rot:"Aguardando Pix", f:p => p.status==="aguardando_pagamento"},
+  {id:"pix",       rot:"Aguardando pagamento", f:p => p.status==="aguardando_pagamento"},
   {id:"concluidos",rot:"Concluídos",     f:p => p.status==="concluido"},
   {id:"cancelados",rot:"Cancelados",     f:p => p.status==="cancelado"}
 ];
@@ -569,6 +569,14 @@ function tagPagamento(p){
     if(pg.status==="expirado") return `<span class="tag tag-cinza">Pix expirou</span>`;
     if(pg.status==="devolvido") return `<span class="tag tag-cinza">Pix devolvido</span>`;
     return `<span class="tag tag-cinza">Pix ${esc(pg.status)}</span>`;
+  }
+  if(pg.forma==="Cartão de crédito"){
+    if(pg.status==="pago") return `<span class="tag tag-pago">✓ Cartão pago</span>`;
+    if(pg.status==="pendente") return `<span class="tag tag-pendente">⏳ Aguardando cartão</span>`;
+    if(pg.status==="recusado") return `<span class="tag tag-pendente">⏳ Cartão recusado, cliente tentando de novo</span>`;
+    if(pg.status==="expirado") return `<span class="tag tag-cinza">Tempo de pagar acabou</span>`;
+    if(pg.status==="devolvido") return `<span class="tag tag-cinza">Cartão estornado</span>`;
+    return `<span class="tag tag-cinza">Cartão ${esc(pg.status)}</span>`;
   }
   return `<span class="tag tag-entrega">Cobrar: ${esc(pg.forma)}</span>`;
 }

@@ -26,7 +26,7 @@ export default async (req, context) => {
     const dia = /^\d{4}-\d{2}-\d{2}$/.test(q || "") ? q : diaDeTrabalho();
     let lista = await listarDia(dia);
     // backup do aviso automático: confere Pix pendentes recentes direto no Mercado Pago
-    const pendentes = lista.filter((p) => p.pagamento.status === "pendente").slice(0, 8);
+    const pendentes = lista.filter((p) => ["pendente", "recusado"].includes(p.pagamento.status)).slice(0, 8);
     if (pendentes.length) await Promise.all(pendentes.map(conferirPix));
     return json({ dia, hoje: diaDeTrabalho(), pixAtivo: mpConfigurado(), pedidos: lista });
   }
@@ -36,7 +36,7 @@ export default async (req, context) => {
     const p = await lerPedido(b.id);
     if (!p) return erro("Pedido não encontrado", 404);
     if (!(PROXIMOS[p.status] || []).includes(b.status)) return erro(`Não dá para ir de "${p.status}" para "${b.status}".`, 409);
-    if (b.status === "em_preparo" && p.pagamento.status === "pendente") return erro("Esse Pix ainda não foi pago.", 409);
+    if (b.status === "em_preparo" && p.pagamento.status === "pendente") return erro("Esse pedido ainda não foi pago.", 409);
     if (b.status === "em_preparo") {
       // fila: só libera o pedido mais antigo que está esperando
       const antes = (await listarDia(p.id.slice(0, 10))).filter((x) => x.status === "novo" && x.id !== p.id && x.criadoEm < p.criadoEm);
