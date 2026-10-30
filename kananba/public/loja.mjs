@@ -37,10 +37,10 @@ export const CARDAPIO = [
   { id: "toscana",   grupo: "espetos", nome: "Linguiça toscana", curto: "Toscana", desc: "Linguiça suculenta, assada na hora.",  preco: 17, precoCompleto: 23, carne: false },
   { id: "calabresa", grupo: "espetos", nome: "Calabresa",  desc: "Calabresa defumada, tostadinha na brasa.", preco: 17, precoCompleto: 23, carne: false },
   { id: "baiao",     grupo: "acomp",   nome: "Baião",      desc: "Porção de baião de dois.",                preco: 9 },
-  { id: "arroz",     grupo: "acomp",   nome: "Arroz branco", desc: "Porção de arroz branco soltinho.",      preco: 10 },
-  // oculto: true = não aparece sozinho no cardápio (só como adicional do Combo 2)
-  { id: "vinagrete", grupo: "acomp",   nome: "Vinagrete",  desc: "Porção de vinagrete fresquinho.",         preco: 5, oculto: true },
-  { id: "farofa",    grupo: "acomp",   nome: "Farofa",     desc: "Porção de farofa da casa.",               preco: 7, oculto: true },
+  { id: "arroz",     grupo: "acomp",   nome: "Arroz branco", desc: "Porção de arroz branco soltinho, 200 g.",      preco: 10 },
+  // adicional: true = aparece em "Adicionais", dentro de Acompanhamentos · oculto: true = não aparece sozinho no cardápio
+  { id: "vinagrete", grupo: "acomp",   nome: "Vinagrete",  desc: "Porção de vinagrete fresquinho.",         preco: 5, adicional: true },
+  { id: "farofa",    grupo: "acomp",   nome: "Farofa",     desc: "Porção de farofa da casa.",               preco: 7, adicional: true },
 
   // Bebidas: geradas logo abaixo (cada sabor/marca vira um item próprio, já visível no cardápio)
 ];

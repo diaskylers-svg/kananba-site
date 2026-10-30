@@ -341,7 +341,7 @@ const incluiCombo = c => c.nome.split("+").slice(1).join("+").trim();
 const SECOES = [
   {id:"combos", nome:"Combos", nota:"Você escolhe os sabores. Pra dividir com a galera."},
   {id:"espetos", nome:"Espetos", nota:"8 cubos em cada. Só o espeto ou Completinho ("+NEGOCIO.completinhoDesc.replace(/^\+ ?/,"com ")+")."},
-  {id:"acomp", nome:"Acompanhamentos", nota:"Porções avulsas."},
+  {id:"acomp", nome:"Acompanhamentos", nota:"Porções e adicionais avulsos."},
   {id:"bebidas", nome:"Bebidas", nota:"Geladas."}
 ];
 let FOTOS = {}, DESTAQUES = {fonte:"casa", ids:{}}, FILA = null, CFG = {cartao:false, publicKey:null};
@@ -435,7 +435,8 @@ function pintarCardapio(){
   const blocos = {
     combos: `<div class="lista">${COMBOS.map(linha).join("")}</div>`,
     espetos: `<div class="lista">${ESPETOS.map(linha).join("")}</div>`,
-    acomp: `<div class="lista">${ACOMP.map(linha).join("")}</div>`,
+    acomp: [["Porções", ACOMP.filter(a=>!a.adicional)], ["Adicionais", ACOMP.filter(a=>a.adicional)]].filter(([,l])=>l.length)
+      .map(([t,l])=>`<div class="subsec"><h3>${t}</h3><div class="lista">${l.map(linha).join("")}</div></div>`).join(""),
     bebidas: [...new Set(BEBIDAS.map(b=>b.secao))].map(sec=>`<div class="subsec"><h3>${esc(sec)}</h3><div class="lista">${BEBIDAS.filter(b=>b.secao===sec).map(linha).join("")}</div></div>`).join("")
   };
   $("cardapio").innerHTML =
