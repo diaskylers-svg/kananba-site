@@ -46,18 +46,22 @@ export const CARDAPIO = [
 ];
 
 /* ===== Bebidas =====
-   Para mudar preço, sabor ou marca, edite só esta lista. preco: null = aparece como "Preço em breve". */
+   Para mudar preço, sabor ou marca, edite só esta lista. Preço diferente num sabor: { nome: "Guaraná", preco: 13 }. preco: null = aparece como "Preço em breve". */
 const BEBIDAS = [
   { sub: "cervejas", secao: "Cerveja lata 350 ml", id: "cerveja", preco: 7, alcool: true, itens: ["Skol", "Brahma", "Itaipava"] },
-  { sub: "refris",   secao: "Refrigerante lata 350 ml", id: "lata", preco: 7,  itens: ["Coca-Cola", "Fanta Laranja", "Guaraná", "Pureza"] },
-  { sub: "refris",   secao: "Refrigerante 600 ml",      id: "600",  preco: 10, itens: ["Coca-Cola", "Fanta Laranja", "Guaraná", "Pureza"] },
-  { sub: "refris",   secao: "Refrigerante 1,5 L",       id: "15",   preco: 15, itens: ["Coca-Cola", "Fanta Laranja", "Guaraná", "Pureza"] },
+  { sub: "refris",   secao: "Refrigerante lata 350 ml", id: "lata", preco: 7,  itens: ["Coca-Cola", "Fanta Laranja", { nome: "Guaraná", preco: 5 }, { nome: "Pureza", preco: 6 }] },
+  { sub: "refris",   secao: "Refrigerante 600 ml",      id: "600",  preco: 10, itens: ["Coca-Cola", "Fanta Laranja", "Guaraná"] },
+  { sub: "refris",   secao: "Refrigerante 1,5 L",       id: "15",   preco: 15, itens: ["Coca-Cola", "Fanta Laranja", { nome: "Guaraná", preco: 13 }] },
+  { sub: "refris",   secao: "Refrigerante 1 L",         id: "1l",   preco: 12, itens: ["Pureza"] },
   { sub: "sucos",    secao: "Suco",                     id: "suco", preco: 8,  itens: ["Goiaba", "Maracujá", "Acerola"] }
 ];
 const slug = (t) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-");
-for (const g of BEBIDAS) for (const nome of g.itens) {
+// cada item pode ser só o nome ("Coca-Cola") ou { nome, preco } quando tem preço diferente do resto da linha
+for (const g of BEBIDAS) for (const it of g.itens) {
+  const nome = typeof it === "string" ? it : it.nome;
+  const preco = typeof it === "object" && it.preco !== undefined ? it.preco : g.preco;
   CARDAPIO.push({ id: `${g.id}-${slug(nome)}`, grupo: "bebidas", sub: g.sub, secao: g.secao, nomeCurto: nome,
-    nome: g.sub === "sucos" ? `Suco de ${nome}` : `${nome} ${g.secao.replace(/^(Refrigerante|Cerveja) ?/, "")}`, preco: g.preco, alcool: !!g.alcool });
+    nome: g.sub === "sucos" ? `Suco de ${nome}` : `${nome} ${g.secao.replace(/^(Refrigerante|Cerveja) ?/, "")}`, preco, alcool: !!g.alcool });
 }
 
 // Combos: o cliente escolhe os sabores dos espetos (a soma tem que dar "espetos").
