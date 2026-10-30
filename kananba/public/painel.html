@@ -673,7 +673,9 @@ function renderFotos(){
   const grupos = [
     ["Combos", COMBOS],
     ["Espetos", CARDAPIO.filter(i => i.grupo==="espetos")],
-    ["Acompanhamentos", CARDAPIO.filter(i => i.grupo==="acomp")]
+    ["Acompanhamentos", CARDAPIO.filter(i => i.grupo==="acomp")],
+    // bebidas: um grupo por tipo (Refrigerante lata, 600 ml, 1,5 L, Suco, Cerveja…)
+    ...[...new Set(CARDAPIO.filter(i => i.grupo==="bebidas").map(i => i.secao))].map(sec => ["Bebidas · " + sec, CARDAPIO.filter(i => i.grupo==="bebidas" && i.secao===sec)])
   ];
   $("fotos-lista").innerHTML = grupos.map(([nome, itens]) => `<div class="grupo-fotos"><h3>${nome}</h3><div class="grade-fotos">${itens.map(it => `
     <div class="fcard" id="fc-${it.id}">
