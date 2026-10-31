@@ -62,6 +62,21 @@ export default async (req, context) => {
     return json({ ok: true, concluidos, cancelados });
   }
 
+  /* ---- excluir UM pedido finalizado (some do painel e do "Meus pedidos" do cliente) ---- */
+  if (req.method === "POST" && acao === "excluir") {
+    let b; try { b = await req.json(); } catch { return erro("Requisição inválida"); }
+    if (!/^\d{4}-\d{2}-\d{2}_[a-z0-9]+$/i.test(b.id || "")) return erro("Pedido não encontrado", 404);
+    const p = await lerPedido(b.id);
+    if (!p) return erro("Pedido não encontrado", 404);
+    if (!["concluido", "cancelado"].includes(p.status)) return erro("Só dá para excluir pedido concluído ou cancelado. Cancele o pedido antes.", 409);
+    // concluído: por padrão a venda continua na Gestão; com manterVenda=false (ex.: pedido de teste) sai de lá também
+    const chaveVenda = `venda/${p.id.slice(0, 10)}/${p.id}`;
+    if (p.status === "concluido" && b.manterVenda !== false) await registrarVenda(p);
+    else await lojaGestao().delete(chaveVenda);
+    await loja().delete(chaveDe(p.id));
+    return json({ ok: true });
+  }
+
   /* ---- gestão: vendas, insumos, lucro e contas a pagar ---- */
   if (req.method === "GET" && acao === "gestao") {
     const q = new URL(req.url).searchParams.get("mes");

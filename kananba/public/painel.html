@@ -597,6 +597,7 @@ function botoes(p){
   if(prox) h += `<button class="btn" data-acao="${prox[0]}" data-id="${p.id}" ${pode?"":"disabled"}>${prox[1]}</button>`;
   h += `<span class="direita"><button class="btn-sec" data-acao="imprimir" data-id="${p.id}">Imprimir</button>`;
   if(!["concluido","cancelado"].includes(p.status)) h += `<button class="btn-perigo" data-acao="cancelado" data-id="${p.id}">Cancelar</button>`;
+  else h += `<button class="btn-perigo" data-acao="excluir" data-id="${p.id}">🗑 Excluir</button>`;
   return h + `</span>`;
 }
 
@@ -632,6 +633,18 @@ async function agir(id, acao, botao){
     return;
   }
   const p = dados.pedidos.find(x => x.id===id);
+  if(acao==="excluir"){
+    if(!confirm(`Excluir o pedido #${p.codigo}?\n\nEle some do painel e da tela "Meus pedidos" do cliente. Não dá para desfazer.`)) return;
+    // concluído: pergunta se a venda continua contando na Gestão (pedido de teste → Cancelar = tira de lá)
+    const manterVenda = p.status==="concluido" ? confirm(`Manter os ${brl(p.total)} deste pedido nas vendas da 📊 Gestão?\n\nOK = manter (venda de verdade)\nCancelar = tirar também da Gestão (pedido de teste)`) : false;
+    botao.disabled = true;
+    try{
+      await api("excluir", {method:"POST", body:JSON.stringify({id, manterVenda})});
+      dados.pedidos = dados.pedidos.filter(x => x.id!==id); recentes.delete(id);
+      render();
+    }catch(e){ if(e.message!=="401") alert(e.message); botao.disabled = false; }
+    return;
+  }
   if(acao==="cancelado"){
     const aviso = p.pagamento.status==="pago" ? "\n\nEsse pedido já foi PAGO no Pix. Se cancelar, devolva o dinheiro pelo app do Mercado Pago." : "";
     if(!confirm(`Cancelar o pedido #${p.codigo}?${aviso}`)) return;

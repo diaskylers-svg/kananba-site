@@ -728,8 +728,9 @@ async function atualizarPedido(m){
   }catch(e){}
   return false;
 }
-async function atualizarTodos(){
-  const alvo = meus.filter(m=>!m.dados || !FINAIS.includes(m.dados.status));
+// tudo=true também confere os finalizados: se a loja excluiu o pedido no painel, ele some daqui
+async function atualizarTodos(tudo){
+  const alvo = tudo===true ? meus.slice() : meus.filter(m=>!m.dados || !FINAIS.includes(m.dados.status));
   const res = await Promise.all(alvo.map(atualizarPedido));
   if(res.some(Boolean) || alvo.length){ pintarBadge(); if(!$("v-pedidos").hidden) pintarPedidos(); if(detalheId && !$("painel").hidden) pintarDetalhe(); }
   agendarPoll();
@@ -890,7 +891,7 @@ function mostrar(v){
   $("v-inicio").hidden=ped; $("v-pedidos").hidden=!ped;
   $("nav-inicio").classList.toggle("ativo",!ped); $("nav-pedidos").classList.toggle("ativo",ped);
   pintarSacola(); scrollTo(0,0);
-  if(ped){ pintarPedidos(); atualizarTodos(); }
+  if(ped){ pintarPedidos(); atualizarTodos(true); }
 }
 $("nav-inicio").onclick=()=>mostrar("inicio");
 $("nav-pedidos").onclick=()=>mostrar("pedidos");
@@ -936,7 +937,7 @@ carregarConfig().then(()=>{ $("info-pag").textContent = formasPag().join(", "); 
 $("info-whats").href = `https://wa.me/${NEGOCIO.whatsapp}`;
 pintarTema(); pintarStatus(); setInterval(pintarStatus,30000);
 pintarAbas(); pintarCardapio(); pintarSacola(); marcarAba(); pintarBadge();
-carregarFotos(); carregarDestaques(); atualizarTodos();
+carregarFotos(); carregarDestaques(); atualizarTodos(true);
 if(location.hash==="#pedidos") mostrar("pedidos");
 </script>
 </body></html>
