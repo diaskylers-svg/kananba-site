@@ -710,7 +710,7 @@ async function enviarPedido(){
 // lista guardada no aparelho: [{id, token, dados}]
 let meus = ler("kananba-meus-pedidos", []);
 (function migrar(){ const g=ler("kananba-pedido",null); if(g?.id && g?.token && !meus.some(m=>m.id===g.id)) meus.unshift({id:g.id, token:g.token, dados:null}); })();
-const salvarMeus=()=>{ meus=meus.slice(0,30); guardar("kananba-meus-pedidos", meus); // histórico de até 30: os mais antigos saem };
+const salvarMeus=()=>{ meus=meus.slice(0,30); guardar("kananba-meus-pedidos", meus); }; // histórico de até 30: os mais antigos saem
 function registrarPedido(id, token, dados){ meus=meus.filter(m=>m.id!==id); meus.unshift({id, token, dados}); salvarMeus(); pintarBadge(); }
 const ativo = m => m.dados && !FINAIS.includes(m.dados.status);
 let abaPed="and", detalheId=null, timerPoll=null, timerRelogio=null, pagoAgora=null;
