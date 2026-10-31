@@ -2,6 +2,7 @@
 // GET  /api/painel/pedidos?dia=AAAA-MM-DD  → pedidos do dia
 // POST /api/painel/status {id, status}     → muda o status do pedido
 import { getStore } from "@netlify/blobs";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { CARDAPIO, COMBOS, json, erro, senhaOk, diaDeTrabalho, listarDia, lerPedido, salvarPedido, conferirPix, marcar, mpConfigurado, loja, chaveDe, registrarVenda, lojaGestao, listarPrefixo, txt, centavos } from "../lib/comum.mjs";
 
 const PROXIMOS = {
@@ -14,12 +15,101 @@ const PROXIMOS = {
   cancelado: []
 };
 
-export default async (req, context) => {
-  const ok = senhaOk(req);
-  if (ok === null) return erro("Defina a variável PAINEL_SENHA na Netlify para usar o painel.", 503);
-  if (!ok) return erro("Senha incorreta", 401);
+/* ---------- equipe: o dono (senha do painel) é o único Master; funcionários entram com nome + PIN ---------- */
+const NIVEIS = ["gerente", "atendente"];
+// o que cada nível pode fazer (Master pode tudo)
+const PERMISSOES = {
+  atendente: new Set(["ping", "pedidos", "status"]),           // ver e andar com os pedidos (sem cancelar)
+  gerente: new Set(["ping", "pedidos", "status", "cancelar", "excluir", "limpar", "foto", "foto-remover"])
+};
+const normNome = (s) => String(s || "").trim().replace(/\s+/g, " ").toLowerCase();
+const hashPin = (sal, pin) => createHash("sha256").update(`${sal}:${pin}`).digest("hex");
+const lerEquipe = async () => (await lojaGestao().get("equipe", { type: "json" })) || [];
+const salvarEquipe = (lista) => lojaGestao().setJSON("equipe", lista);
+const semPin = ({ pinHash, sal, falhas, bloqueadoAte, ...f }) => ({ ...f, bloqueado: !!(bloqueadoAte && Date.parse(bloqueadoAte) > Date.now()) });
 
+async function autenticar(req) {
+  let bruto = req.headers.get("x-painel-usuario") || "";
+  try { bruto = decodeURIComponent(bruto); } catch {}
+  const nome = normNome(bruto);
+  if (!nome) {
+    const ok = senhaOk(req);
+    if (ok === null) return { erro: erro("Defina a variável PAINEL_SENHA na Netlify para usar o painel.", 503) };
+    return ok ? { quem: { nome: "Dono", nivel: "master" } } : { erro: erro("Senha incorreta", 401) };
+  }
+  const pin = req.headers.get("x-painel-senha") || "";
+  const equipe = await lerEquipe();
+  const f = equipe.find((x) => normNome(x.nome) === nome);
+  if (!f || !f.ativo) return { erro: erro("Nome ou PIN incorreto", 401) };
+  if (f.bloqueadoAte && Date.parse(f.bloqueadoAte) > Date.now()) return { erro: erro("Muitas tentativas erradas. Tente de novo em 15 minutos ou peça ao dono.", 429) };
+  const certo = timingSafeEqual(Buffer.from(hashPin(f.sal, pin)), Buffer.from(f.pinHash));
+  if (!certo) {
+    // trava depois de 5 erros seguidos (PIN de 4 dígitos é curto)
+    f.falhas = (f.falhas || 0) + 1;
+    if (f.falhas >= 5) { f.falhas = 0; f.bloqueadoAte = new Date(Date.now() + 15 * 60e3).toISOString(); }
+    await salvarEquipe(equipe);
+    return { erro: erro("Nome ou PIN incorreto", 401) };
+  }
+  if (f.falhas || f.bloqueadoAte) { f.falhas = 0; f.bloqueadoAte = null; await salvarEquipe(equipe); }
+  return { quem: { id: f.id, nome: f.nome, nivel: f.nivel } };
+}
+
+// registro de ações dos funcionários (o que o dono faz não entra)
+async function registrar(quem, acao, detalhe) {
+  if (quem.nivel === "master") return;
+  const agora = new Date();
+  const id = `${diaDeTrabalho(agora)}/${agora.toISOString()}_${Math.random().toString(36).slice(2, 7)}`;
+  await lojaGestao().setJSON(`registro/${id}`, { quando: agora.toISOString(), quem: quem.nome, quemId: quem.id, nivel: quem.nivel, acao, detalhe: txt(detalhe, 200) });
+}
+
+const ROTULO = { novo: "Novo", em_preparo: "Na brasa", saiu: "Saiu para entrega", pronto: "Pronto", concluido: "Concluído", cancelado: "Cancelado", aguardando_pagamento: "Aguardando pagamento" };
+
+export default async (req, context) => {
   const acao = context.params["0"] || context.params.acao;
+  const auth = await autenticar(req);
+  if (auth.erro) return auth.erro;
+  const quem = auth.quem;
+  const pode = (a) => quem.nivel === "master" || PERMISSOES[quem.nivel]?.has(a);
+  if (!pode(acao)) return erro("Seu nível de acesso não permite isso. Fale com o dono.", 403);
+
+  if (req.method === "GET" && acao === "ping") return json({ ok: true, pixAtivo: mpConfigurado(), quem });
+
+  /* ---- equipe (só o dono) ---- */
+  if (req.method === "GET" && acao === "equipe") return json({ equipe: (await lerEquipe()).map(semPin) });
+  if (req.method === "POST" && acao === "equipe-salvar") {
+    let b; try { b = await req.json(); } catch { return erro("Requisição inválida"); }
+    const nome = txt(b.nome, 40).trim().replace(/\s+/g, " ");
+    if (!nome) return erro("Informe o nome do funcionário.");
+    if (!NIVEIS.includes(b.nivel)) return erro("Escolha o nível de acesso.");
+    const pin = b.pin == null || b.pin === "" ? null : String(b.pin);
+    if (pin !== null && !/^\d{4}$/.test(pin)) return erro("O PIN precisa ter 4 números.");
+    const equipe = await lerEquipe();
+    if (equipe.some((x) => x.id !== b.id && normNome(x.nome) === normNome(nome))) return erro("Já existe um funcionário com esse nome.");
+    let f = b.id ? equipe.find((x) => x.id === b.id) : null;
+    if (b.id && !f) return erro("Funcionário não encontrado", 404);
+    if (!f) {
+      if (!pin) return erro("Defina um PIN de 4 números.");
+      f = { id: randomBytes(5).toString("hex"), criadoEm: new Date().toISOString(), ativo: true };
+      equipe.push(f);
+    }
+    f.nome = nome; f.nivel = b.nivel;
+    if (typeof b.ativo === "boolean") f.ativo = b.ativo;
+    if (pin) { f.sal = randomBytes(8).toString("hex"); f.pinHash = hashPin(f.sal, pin); f.falhas = 0; f.bloqueadoAte = null; }
+    await salvarEquipe(equipe);
+    return json({ ok: true, equipe: equipe.map(semPin) });
+  }
+  if (req.method === "POST" && acao === "equipe-remover") {
+    let b; try { b = await req.json(); } catch { return erro("Requisição inválida"); }
+    const equipe = (await lerEquipe()).filter((x) => x.id !== b.id);
+    await salvarEquipe(equipe);
+    return json({ ok: true, equipe: equipe.map(semPin) });
+  }
+  if (req.method === "GET" && acao === "registro") {
+    const q = new URL(req.url).searchParams.get("dia");
+    const dia = /^\d{4}-\d{2}-\d{2}$/.test(q || "") ? q : diaDeTrabalho();
+    const itens = (await listarPrefixo(`registro/${dia}/`)).sort((a, z) => z.quando.localeCompare(a.quando));
+    return json({ dia, registro: itens });
+  }
 
   if (req.method === "GET" && acao === "pedidos") {
     const q = new URL(req.url).searchParams.get("dia");
@@ -36,6 +126,7 @@ export default async (req, context) => {
     const p = await lerPedido(b.id);
     if (!p) return erro("Pedido não encontrado", 404);
     if (!(PROXIMOS[p.status] || []).includes(b.status)) return erro(`Não dá para ir de "${p.status}" para "${b.status}".`, 409);
+    if (b.status === "cancelado" && !pode("cancelar")) return erro("Só o gerente ou o dono podem cancelar pedidos.", 403);
     if (b.status === "em_preparo" && p.pagamento.status === "pendente") return erro("Esse pedido ainda não foi pago.", 409);
     if (b.status === "em_preparo") {
       // fila: só libera o pedido mais antigo que está esperando
@@ -46,6 +137,7 @@ export default async (req, context) => {
     marcar(p, b.status);
     await salvarPedido(p);
     if (p.status === "concluido") await registrarVenda(p);
+    await registrar(quem, b.status === "cancelado" ? "Cancelou pedido" : "Mudou status", `#${p.codigo}: ${ROTULO[b.status] || b.status}`);
     return json({ ok: true, pedido: p });
   }
 
@@ -59,6 +151,7 @@ export default async (req, context) => {
       if (p.status === "concluido") { await registrarVenda(p); await loja().delete(chaveDe(p.id)); concluidos++; }
       else if (p.status === "cancelado") { await loja().delete(chaveDe(p.id)); cancelados++; }
     }
+    if (concluidos || cancelados) await registrar(quem, "Limpou pedidos", `Dia ${dia}: ${concluidos} concluído(s), ${cancelados} cancelado(s)`);
     return json({ ok: true, concluidos, cancelados });
   }
 
@@ -74,6 +167,7 @@ export default async (req, context) => {
     if (p.status === "concluido" && b.manterVenda !== false) await registrarVenda(p);
     else await lojaGestao().delete(chaveVenda);
     await loja().delete(chaveDe(p.id));
+    await registrar(quem, "Excluiu pedido", `#${p.codigo} (${ROTULO[p.status]}, ${p.total.toFixed(2).replace(".", ",")})${p.status === "concluido" ? (b.manterVenda !== false ? " · venda mantida na Gestão" : " · tirado da Gestão") : ""}`);
     return json({ ok: true });
   }
 
@@ -136,7 +230,6 @@ export default async (req, context) => {
     return json({ ok: true, insumo: ins });
   }
 
-  if (req.method === "GET" && acao === "ping") return json({ ok: true, pixAtivo: mpConfigurado() });
 
   /* ---- fotos do cardápio ---- */
   if (req.method === "POST" && (acao === "foto" || acao === "foto-remover")) {
@@ -157,6 +250,8 @@ export default async (req, context) => {
       indice[b.id] = Date.now();
     }
     await s.setJSON("_indice", indice);
+    const nomeItem = [...CARDAPIO, ...COMBOS].find((c) => c.id === b.id)?.nome || b.id;
+    await registrar(quem, acao === "foto" ? "Trocou foto" : "Removeu foto", nomeItem);
     return json({ ok: true, fotos: indice });
   }
 

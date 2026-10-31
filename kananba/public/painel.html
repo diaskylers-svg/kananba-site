@@ -61,6 +61,8 @@ input:focus{outline:none;border-color:var(--brasa);box-shadow:0 0 0 3px var(--br
 .login label{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;color:var(--texto-2)}
 .lembrar{flex-direction:row!important;align-items:center;gap:8px!important;font-weight:500!important}
 .lembrar input{width:18px;height:18px;accent-color:var(--brasa)}
+.dica-login{font-weight:400;color:var(--texto-3);font-size:12.5px}
+.quem-sou{font-size:13px;color:var(--texto-2);white-space:nowrap}
 .erro-login{color:var(--perigo);font-size:14px;min-height:1em;margin:0}
 
 /* ---------- topo ---------- */
@@ -163,7 +165,7 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
 .fcard input[type=file]{display:none}
 
 /* ---------- gestão ---------- */
-#sec-gestao{max-width:1280px;margin:0 auto;padding:16px 16px 48px;display:flex;flex-direction:column;gap:14px}
+#sec-gestao,#sec-equipe{max-width:1280px;margin:0 auto;padding:16px 16px 48px;display:flex;flex-direction:column;gap:14px}
 .g-topo{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
 .g-topo h2{font-family:var(--f-display);font-weight:900;font-size:30px;text-transform:uppercase;margin:4px 0}
 .g-topo p{margin:0;color:var(--texto-2)}
@@ -236,7 +238,8 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
   <form id="form-login">
     <div class="marca">KANAN<b>BA</b></div>
     <p>Bastidores · pedidos e pagamentos</p>
-    <label>Senha do painel<input type="password" id="senha" autocomplete="current-password" required></label>
+    <label>Seu nome <small class="dica-login">Dono: deixe em branco</small><input type="text" id="usuario" autocomplete="username" autocapitalize="words"></label>
+    <label><span id="rot-senha">Senha do painel</span><input type="password" id="senha" autocomplete="current-password" required></label>
     <label class="lembrar"><input type="checkbox" id="lembrar" checked> Lembrar neste aparelho</label>
     <p class="erro-login" id="erro-login" role="alert"></p>
     <button class="btn" type="submit" id="btn-entrar">Entrar</button>
@@ -260,6 +263,7 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
         </select>
         <input type="file" id="arquivo-som" accept="audio/*" hidden>
         <button class="btn-sec som" id="btn-som" type="button" aria-pressed="true" title="Som de novo pedido">🔔 Som</button>
+        <span class="quem-sou" id="quem-sou"></span>
         <button class="btn-sec" id="btn-sair" type="button">Sair</button>
       </div>
     </div>
@@ -268,6 +272,7 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
     <button class="secao" role="tab" data-secao="pedidos" aria-selected="true">📋 Pedidos</button>
     <button class="secao" role="tab" data-secao="fotos" aria-selected="false">📷 Fotos do cardápio</button>
     <button class="secao" role="tab" data-secao="gestao" aria-selected="false">📊 Gestão</button>
+    <button class="secao" role="tab" data-secao="equipe" aria-selected="false">👥 Equipe</button>
   </nav>
   <section id="sec-gestao" hidden>
     <div class="g-topo">
@@ -351,6 +356,31 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
     </div>
     <div id="fotos-lista"></div>
   </section>
+  <section id="sec-equipe" hidden>
+    <div class="g-topo"><div><h2>Equipe</h2><p>Quem entra no painel e o que cada um pode fazer. Você é o único Dono.</p></div></div>
+    <div class="g-grade">
+      <div class="g-card">
+        <h3 id="eq-titulo">➕ Novo funcionário</h3>
+        <form class="g-form" id="eq-form">
+          <label>Nome<input id="eq-nome" maxlength="40" required autocomplete="off"></label>
+          <label>Nível de acesso<select id="eq-nivel"><option value="atendente">Atendente</option><option value="gerente">Gerente</option></select></label>
+          <label>PIN (4 números)<input id="eq-pin" inputmode="numeric" pattern="\d{4}" maxlength="4" autocomplete="off" placeholder="ex.: 4821"></label>
+          <div class="g-pago"><button class="btn" type="submit" id="eq-salvar">Salvar</button><button class="btn-sec" type="button" id="eq-cancelar" hidden>Cancelar edição</button></div>
+        </form>
+        <p class="g-ajuda"><b>Atendente:</b> vê os pedidos e muda o andamento (na brasa, saiu, entregue). <b>Gerente:</b> tudo do atendente + cancelar, excluir, limpar pedidos e trocar fotos. Gestão e Equipe são só suas.</p>
+      </div>
+      <div class="g-card"><h3>🧑‍🍳 Gerentes</h3><ul class="g-lista" id="eq-gerentes"></ul></div>
+      <div class="g-card"><h3>🙋 Atendentes</h3><ul class="g-lista" id="eq-atendentes"></ul></div>
+      <div class="g-card">
+        <h3>📝 Registro de ações</h3>
+        <div class="g-form">
+          <label>Dia<input type="date" id="rg-dia"></label>
+          <label>Funcionário<select id="rg-quem"><option value="">Todos</option></select></label>
+        </div>
+        <ul class="g-lista" id="rg-lista" style="margin-top:10px"></ul>
+      </div>
+    </div>
+  </section>
   <main id="sec-pedidos">
     <div class="aviso-cfg" id="aviso-pix" hidden>O Pix ainda não está configurado (falta o MP_ACCESS_TOKEN na Netlify). Os clientes só conseguem pagar na entrega.</div>
     <div class="numeros" id="numeros"></div>
@@ -373,6 +403,10 @@ const guardar = (k,v) => { try{ v==null ? localStorage.removeItem(k) : localStor
 const ler = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } };
 
 let senha = ler("kananba-painel-senha") || sessionStorage.getItem?.("kananba-painel-senha") || "";
+let usuario = ler("kananba-painel-usuario") || sessionStorage.getItem?.("kananba-painel-usuario") || "";
+let eu = {nome:"", nivel:"atendente"};   // quem está logado (vem do servidor)
+const ehMaster = () => eu.nivel==="master";
+const podeGerir = () => eu.nivel==="master" || eu.nivel==="gerente";
 let dados = null, abaAtual = "novos", diaEscolhido = null, timer = null, somLigado = ler("kananba-painel-som") !== "0";
 const vistos = new Set(JSON.parse(ler("kananba-painel-vistos") || "[]"));
 const recentes = new Set();
@@ -389,9 +423,9 @@ const ABAS = [
 
 /* ---------- API ---------- */
 async function api(caminho, opcoes={}){
-  const r = await fetch(`/api/painel/${caminho}`, {...opcoes, headers:{"x-painel-senha":senha, "content-type":"application/json", ...(opcoes.headers||{})}});
+  const r = await fetch(`/api/painel/${caminho}`, {...opcoes, headers:{"x-painel-senha":senha, "x-painel-usuario":encodeURIComponent(usuario), "content-type":"application/json", ...(opcoes.headers||{})}});
   const d = await r.json().catch(()=>({}));
-  if(r.status===401){ sair("Senha incorreta."); throw new Error("401"); }
+  if(r.status===401 || r.status===429){ sair(d.erro || "Senha incorreta."); throw new Error("401"); }
   if(!r.ok) throw new Error(d.erro || `Erro ${r.status}`);
   return d;
 }
@@ -399,18 +433,30 @@ async function api(caminho, opcoes={}){
 /* ---------- login ---------- */
 $("form-login").onsubmit = async e => {
   e.preventDefault();
-  senha = $("senha").value; $("erro-login").textContent = ""; $("btn-entrar").disabled = true;
+  senha = $("senha").value; usuario = $("usuario").value.trim(); $("erro-login").textContent = ""; $("btn-entrar").disabled = true;
   try{
-    await api("ping");
-    if($("lembrar").checked) guardar("kananba-painel-senha", senha); else { guardar("kananba-painel-senha", null); try{sessionStorage.setItem("kananba-painel-senha", senha);}catch(e){} }
+    const d = await api("ping");
+    if($("lembrar").checked){ guardar("kananba-painel-senha", senha); guardar("kananba-painel-usuario", usuario||null); }
+    else { guardar("kananba-painel-senha", null); guardar("kananba-painel-usuario", null); try{sessionStorage.setItem("kananba-painel-senha", senha); sessionStorage.setItem("kananba-painel-usuario", usuario);}catch(e){} }
     destravarSom();
-    entrar();
+    entrar(d);
   }catch(err){ if(err.message!=="401") $("erro-login").textContent = err.message; }
   finally{ $("btn-entrar").disabled = false; }
 };
-function entrar(){ $("tela-login").hidden = true; $("tela-painel").hidden = false; carregar(); }
+function entrar(d){
+  eu = d?.quem || eu;
+  $("quem-sou").textContent = ehMaster() ? "👑 Dono" : `${eu.nome} · ${eu.nivel==="gerente"?"Gerente":"Atendente"}`;
+  // cada nível vê só o que pode usar
+  document.querySelector('[data-secao="gestao"]').hidden = !ehMaster();
+  document.querySelector('[data-secao="equipe"]').hidden = !ehMaster();
+  document.querySelector('[data-secao="fotos"]').hidden = !podeGerir();
+  document.querySelector(".limpar-linha").hidden = !podeGerir();
+  document.querySelector('[data-secao="pedidos"]').click();
+  $("tela-login").hidden = true; $("tela-painel").hidden = false; carregar();
+}
 function sair(msg){
   clearTimeout(timer); senha = ""; guardar("kananba-painel-senha", null); try{sessionStorage.removeItem("kananba-painel-senha");}catch(e){}
+  $("usuario").value = usuario;
   $("tela-painel").hidden = true; $("tela-login").hidden = false; $("erro-login").textContent = msg || ""; $("senha").value = ""; $("senha").focus();
 }
 $("btn-sair").onclick = () => sair();
@@ -591,13 +637,15 @@ function botoes(p){
   }[p.status];
   const fila = dados.pedidos.filter(x=>x.status==="novo").sort((a,b)=>a.criadoEm.localeCompare(b.criadoEm));
   const posFila = p.status==="novo" ? fila.findIndex(x=>x.id===p.id) : -1;
-  if(posFila>0) return `<span class="na-fila">⏳ Na fila: ${posFila+1}º · libere antes o #${esc(fila[0].codigo)}</span><span class="direita"><button class="btn-sec" data-acao="imprimir" data-id="${p.id}">Imprimir</button><button class="btn-perigo" data-acao="cancelado" data-id="${p.id}">Cancelar</button></span>`;
+  if(posFila>0) return `<span class="na-fila">⏳ Na fila: ${posFila+1}º · libere antes o #${esc(fila[0].codigo)}</span><span class="direita"><button class="btn-sec" data-acao="imprimir" data-id="${p.id}">Imprimir</button>${podeGerir()?`<button class="btn-perigo" data-acao="cancelado" data-id="${p.id}">Cancelar</button>`:""}</span>`;
   const pode = !(p.status==="novo" && p.pagamento.status==="pendente");
   let h = "";
   if(prox) h += `<button class="btn" data-acao="${prox[0]}" data-id="${p.id}" ${pode?"":"disabled"}>${prox[1]}</button>`;
   h += `<span class="direita"><button class="btn-sec" data-acao="imprimir" data-id="${p.id}">Imprimir</button>`;
-  if(!["concluido","cancelado"].includes(p.status)) h += `<button class="btn-perigo" data-acao="cancelado" data-id="${p.id}">Cancelar</button>`;
-  else h += `<button class="btn-perigo" data-acao="excluir" data-id="${p.id}">🗑 Excluir</button>`;
+  if(podeGerir()){
+    if(!["concluido","cancelado"].includes(p.status)) h += `<button class="btn-perigo" data-acao="cancelado" data-id="${p.id}">Cancelar</button>`;
+    else h += `<button class="btn-perigo" data-acao="excluir" data-id="${p.id}">🗑 Excluir</button>`;
+  }
   return h + `</span>`;
 }
 
@@ -671,10 +719,79 @@ aplicarTema(document.documentElement.getAttribute("data-theme")==="light" ? "lig
 document.querySelectorAll(".secao").forEach(b => b.onclick = () => {
   document.querySelectorAll(".secao").forEach(x => x.setAttribute("aria-selected", x===b));
   const sec = b.dataset.secao;
-  $("sec-fotos").hidden = sec!=="fotos"; $("sec-gestao").hidden = sec!=="gestao"; $("sec-pedidos").hidden = sec!=="pedidos";
+  $("sec-fotos").hidden = sec!=="fotos"; $("sec-gestao").hidden = sec!=="gestao"; $("sec-pedidos").hidden = sec!=="pedidos"; $("sec-equipe").hidden = sec!=="equipe";
+  if(sec==="equipe") carregarEquipe();
   if(sec==="fotos") carregarFotos();
   if(sec==="gestao") carregarGestao();
 });
+
+
+/* ---------- equipe e registro de ações (só o dono) ---------- */
+let equipe = [], editandoId = null;
+const NIVEL_ROT = {gerente:"Gerente", atendente:"Atendente"};
+async function carregarEquipe(){
+  try{ equipe = (await api("equipe")).equipe; }catch(e){ if(e.message!=="401") alert(e.message); return; }
+  renderEquipe();
+  if(!$("rg-dia").value) $("rg-dia").value = dados?.hoje || hojeSP();
+  carregarRegistro();
+}
+function linhaFunc(f){
+  return `<li><div><b>${esc(f.nome)}</b>${f.ativo?"":` <span class="pend">· desativado</span>`}${f.bloqueado?` <span class="atrasada">· travado por PIN errado</span>`:""}<small>desde ${new Date(f.criadoEm).toLocaleDateString("pt-BR")}</small></div>
+    <button class="btn-sec" data-eq-editar="${f.id}">Editar</button>
+    <button class="btn-sec" data-eq-ativo="${f.id}">${f.ativo?"Desativar":"Ativar"}</button>
+    <button class="btn-perigo" data-eq-remover="${f.id}">Remover</button></li>`;
+}
+function renderEquipe(){
+  // cada um na sua faixa (nível de acesso)
+  for(const n of ["gerente","atendente"]){
+    const lista = equipe.filter(f=>f.nivel===n).sort((a,b)=>a.nome.localeCompare(b.nome));
+    $(n==="gerente"?"eq-gerentes":"eq-atendentes").innerHTML = lista.length ? lista.map(linhaFunc).join("") : `<li><div><small>Ninguém nesta faixa ainda.</small></div></li>`;
+  }
+  const sel = $("rg-quem"), atual = sel.value;
+  sel.innerHTML = `<option value="">Todos</option>` + equipe.map(f=>`<option value="${f.id}">${esc(f.nome)} (${NIVEL_ROT[f.nivel]})</option>`).join("");
+  sel.value = equipe.some(f=>f.id===atual) ? atual : "";
+  document.querySelectorAll("[data-eq-editar]").forEach(b=>b.onclick=()=>editarFunc(b.dataset.eqEditar));
+  document.querySelectorAll("[data-eq-ativo]").forEach(b=>b.onclick=async()=>{
+    const f = equipe.find(x=>x.id===b.dataset.eqAtivo); b.disabled = true;
+    try{ equipe = (await api("equipe-salvar",{method:"POST",body:JSON.stringify({id:f.id,nome:f.nome,nivel:f.nivel,ativo:!f.ativo})})).equipe; renderEquipe(); }
+    catch(e){ if(e.message!=="401") alert(e.message); b.disabled = false; }
+  });
+  document.querySelectorAll("[data-eq-remover]").forEach(b=>b.onclick=async()=>{
+    const f = equipe.find(x=>x.id===b.dataset.eqRemover);
+    if(!confirm(`Remover ${f.nome} da equipe? Ele não consegue mais entrar no painel. O registro de ações dele continua guardado.`)) return;
+    try{ equipe = (await api("equipe-remover",{method:"POST",body:JSON.stringify({id:f.id})})).equipe; if(editandoId===f.id) limparFormEquipe(); renderEquipe(); }
+    catch(e){ if(e.message!=="401") alert(e.message); }
+  });
+}
+function editarFunc(id){
+  const f = equipe.find(x=>x.id===id); if(!f) return;
+  editandoId = id; $("eq-titulo").textContent = `✏️ Editar ${f.nome}`;
+  $("eq-nome").value = f.nome; $("eq-nivel").value = f.nivel; $("eq-pin").value = ""; $("eq-pin").placeholder = "deixe vazio para manter";
+  $("eq-cancelar").hidden = false; $("eq-nome").focus();
+}
+function limparFormEquipe(){
+  editandoId = null; $("eq-titulo").textContent = "➕ Novo funcionário"; $("eq-form").reset();
+  $("eq-pin").placeholder = "ex.: 4821"; $("eq-cancelar").hidden = true;
+}
+$("eq-cancelar").onclick = limparFormEquipe;
+$("eq-form").onsubmit = async e => {
+  e.preventDefault();
+  const corpo = {id:editandoId||undefined, nome:$("eq-nome").value, nivel:$("eq-nivel").value, pin:$("eq-pin").value};
+  $("eq-salvar").disabled = true;
+  try{ equipe = (await api("equipe-salvar",{method:"POST",body:JSON.stringify(corpo)})).equipe; limparFormEquipe(); renderEquipe(); }
+  catch(err){ if(err.message!=="401") alert(err.message); }
+  finally{ $("eq-salvar").disabled = false; }
+};
+async function carregarRegistro(){
+  let itens = [];
+  try{ itens = (await api(`registro?dia=${$("rg-dia").value}`)).registro; }catch(e){ if(e.message!=="401") alert(e.message); return; }
+  const filtro = $("rg-quem").value;
+  if(filtro) itens = itens.filter(r=>r.quemId===filtro);
+  $("rg-lista").innerHTML = itens.length ? itens.map(r=>`<li><div><b>${esc(r.acao)}</b> · ${esc(r.detalhe||"")}<small>${hora(r.quando)} · ${esc(r.quem)} (${NIVEL_ROT[r.nivel]||r.nivel})</small></div></li>`).join("")
+    : `<li><div><small>Nenhuma ação registrada neste dia.</small></div></li>`;
+}
+$("rg-dia").onchange = carregarRegistro;
+$("rg-quem").onchange = carregarRegistro;
 
 /* ---------- fotos do cardápio ---------- */
 let fotos = {};
@@ -952,6 +1069,9 @@ function renderPrevisao(){
 }
 
 /* ---------- início ---------- */
+$("usuario").value = usuario;
+$("usuario").oninput = () => { $("rot-senha").textContent = $("usuario").value.trim() ? "PIN (4 números)" : "Senha do painel"; };
+$("usuario").oninput();
 if(senha){ api("ping").then(entrar).catch(()=>{}); } else { $("senha").focus(); }
 setInterval(() => { if(dados && !$("tela-painel").hidden) render(); }, 60000); // atualiza o "há X min"
 </script>
