@@ -263,6 +263,7 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
         </select>
         <input type="file" id="arquivo-som" accept="audio/*" hidden>
         <button class="btn-sec som" id="btn-som" type="button" aria-pressed="true" title="Som de novo pedido">🔔 Som</button>
+        <button class="btn-sec" id="btn-impressora" type="button" aria-pressed="false" title="Imprime as 2 vias (sacola e caixa) quando o pedido vai pra brasa. Ligue só no computador da impressora.">🖨 Impressão: desligada</button>
         <span class="quem-sou" id="quem-sou"></span>
         <button class="btn-sec" id="btn-sair" type="button">Sair</button>
       </div>
@@ -556,6 +557,7 @@ async function carregar(){
     $("aviso-pix").hidden = dados.pixAtivo;
     detectarNovos();
     render();
+    imprimirAutomatico();
   }catch(e){
     if(e.message==="401") return;
     $("vivo").classList.add("off"); $("vivo-txt").textContent = "sem conexão, tentando de novo…";
@@ -579,6 +581,92 @@ let piscando = null;
 function piscarTitulo(){
   clearInterval(piscando); let n = 0;
   piscando = setInterval(() => { document.title = (n++ % 2) ? "KANANBA · Bastidores" : "🔥 NOVO PEDIDO!"; if(n>20 || !document.hidden && n>6){ clearInterval(piscando); document.title = "KANANBA · Bastidores"; } }, 700);
+}
+
+
+/* ---------- impressora de pedidos (térmica 58 mm): via da sacola + via do caixa ---------- */
+// liga por aparelho: só o computador com a impressora imprime
+let autoImprimir = ler("kananba-impressora") === "1";
+const impressos = new Set(JSON.parse(ler("kananba-impressos") || "[]"));
+const salvarImpressos = () => guardar("kananba-impressos", JSON.stringify([...impressos].slice(-300)));
+function pintarImpressora(){
+  $("btn-impressora").setAttribute("aria-pressed", autoImprimir);
+  $("btn-impressora").textContent = autoImprimir ? "🖨 Impressão: ligada" : "🖨 Impressão: desligada";
+}
+$("btn-impressora").onclick = () => {
+  autoImprimir = !autoImprimir; guardar("kananba-impressora", autoImprimir ? "1" : "0");
+  // ao ligar, não reimprime o que já está na brasa
+  if(autoImprimir && dados) { dados.pedidos.filter(p=>p.status==="em_preparo").forEach(p=>impressos.add(p.id)); salvarImpressos(); }
+  pintarImpressora();
+};
+pintarImpressora();
+
+const tx = t => esc(t);
+const dataHora = iso => new Date(iso).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"});
+function linhaPagamento(p){
+  const pg = p.pagamento;
+  if(pg.status==="pago") return `<b>${tx(pg.forma)} - PAGO</b>`;
+  if(pg.forma==="Dinheiro") return `<b>COBRAR ${brl(p.total)} EM DINHEIRO</b>${pg.troco?`<br>Levar troco para R$ ${tx(pg.troco)}`:""}`;
+  if(pg.forma==="Cartão na entrega") return `<b>COBRAR ${brl(p.total)} NO CARTAO</b>`;
+  return `<b>${tx(pg.forma)} - ${tx(pg.status)}</b>`;
+}
+function viaHTML(p, via){
+  const e = p.entrega, c = p.cliente, sacola = via==="sacola";
+  const itens = p.itens.map(i => `<div class="it"><span>${i.qtd}x ${tx(i.nome)}</span><span>${brl(i.total)}</span></div>`
+    + (i.detalhe?`<div class="sub">${tx(i.detalhe)}</div>`:"")
+    + (i.ponto||i.obs?`<div class="sub"><b>OBS: ${tx([i.ponto,i.obs].filter(Boolean).join(" · "))}</b></div>`:"")).join("");
+  const endereco = e.modo==="Entrega"
+    ? `${tx(e.rua)}, ${tx(e.numero)}${e.complemento?" - "+tx(e.complemento):""}<br>${tx(e.bairro)}${e.cidade?" - "+tx(e.cidade):""}${e.referencia?`<br>Ref.: ${tx(e.referencia)}`:""}`
+    : "";
+  return `<section class="via">
+    <div class="c g">KANANBA</div>
+    <div class="c">${sacola ? "VIA DA SACOLA" : "VIA DO CAIXA"}</div>
+    <div class="c gg">#${tx(p.codigo)}</div>
+    <div class="c">${dataHora(p.criadoEm)} · ${e.modo==="Entrega"?"ENTREGA":"RETIRADA"}</div>
+    <hr>
+    <div><b>${tx(c.nome)}</b><br>${fmtTel(c.tel)}</div>
+    ${e.modo==="Entrega" ? `<div class="end">${endereco}</div>` : `<div><b>CLIENTE RETIRA NO LOCAL</b></div>`}
+    <hr>
+    ${itens}
+    ${p.obsGeral?`<hr><div><b>OBS DO PEDIDO:</b> ${tx(p.obsGeral)}</div>`:""}
+    <hr>
+    <div class="it"><span>Itens</span><span>${brl(p.subtotal)}</span></div>
+    ${p.taxa?`<div class="it"><span>Entrega</span><span>${brl(p.taxa)}</span></div>`:""}
+    <div class="it g"><span>TOTAL</span><span>${brl(p.total)}</span></div>
+    <div>${linhaPagamento(p)}</div>
+    ${sacola ? `<hr><div class="c">Obrigado pela preferencia!<br>Peca de novo: kananba.com.br</div>` : `<hr><div class="c">Impresso ${dataHora(new Date().toISOString())}</div>`}
+  </section>`;
+}
+const CSS_COMANDA = `@page{size:58mm auto;margin:0}
+  *{box-sizing:border-box;color:#000!important;background:#fff!important}
+  body{margin:0;width:58mm;padding:2mm 3mm 6mm;font:12px/1.3 Arial,Helvetica,sans-serif}
+  .via{page-break-after:always;break-after:page}.via:last-child{page-break-after:auto;break-after:auto}
+  .c{text-align:center}.g{font-size:16px;font-weight:900}.gg{font-size:22px;font-weight:900;margin:2px 0}
+  hr{border:0;border-top:1px dashed #000;margin:5px 0}
+  .it{display:flex;justify-content:space-between;gap:6px}.it span:last-child{white-space:nowrap}
+  .sub{padding-left:8px;font-size:11px}.end{margin-top:3px}`;
+let filaImpressao = Promise.resolve();
+function imprimirComanda(p){
+  filaImpressao = filaImpressao.then(() => new Promise(fim => {
+    const f = document.createElement("iframe");
+    f.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
+    f.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><style>${CSS_COMANDA}</style></head><body>${viaHTML(p,"sacola")}${viaHTML(p,"caixa")}</body></html>`;
+    f.onload = () => {
+      try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){}
+      setTimeout(() => { f.remove(); fim(); }, 1500);
+    };
+    document.body.appendChild(f);
+  }));
+}
+// imprime sozinho todo pedido que foi pra brasa (liberado de qualquer aparelho)
+let primeiraImpressao = true;
+function imprimirAutomatico(){
+  if(!dados || dados.dia!==dados.hoje) return;   // só no dia de hoje
+  const naBrasa = dados.pedidos.filter(p => p.status==="em_preparo" && !impressos.has(p.id));
+  // ao abrir o painel, o que já estava na brasa não é reimpresso
+  if(primeiraImpressao || !autoImprimir){ primeiraImpressao = false; if(!autoImprimir) return; naBrasa.forEach(p=>impressos.add(p.id)); salvarImpressos(); return; }
+  for(const p of naBrasa){ impressos.add(p.id); imprimirComanda(p); }
+  if(naBrasa.length) salvarImpressos();
 }
 
 /* ---------- render ---------- */
@@ -675,9 +763,8 @@ function cartao(p){
 
 async function agir(id, acao, botao){
   if(acao==="imprimir"){
-    const card = $("card-"+id); card.classList.add("alvo"); document.body.classList.add("imprimindo");
-    window.print();
-    setTimeout(() => { card.classList.remove("alvo"); document.body.classList.remove("imprimindo"); }, 500);
+    const ped = dados.pedidos.find(x => x.id===id);
+    if(ped){ impressos.add(id); salvarImpressos(); imprimirComanda(ped); }
     return;
   }
   const p = dados.pedidos.find(x => x.id===id);
@@ -702,6 +789,7 @@ async function agir(id, acao, botao){
     const d = await api("status", {method:"POST", body:JSON.stringify({id, status:acao})});
     Object.assign(p, d.pedido); recentes.delete(id);
     render();
+    imprimirAutomatico();
   }catch(e){ if(e.message!=="401") alert(e.message); botao.disabled = false; }
 }
 
