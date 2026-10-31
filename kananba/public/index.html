@@ -757,6 +757,9 @@ function pintarPedidos(){
       <div class="ped-itens">${p.itens.map(i=>`${i.qtd}× ${esc(i.nome)}`).join(" · ")}</div>
       <div class="ped-base"><span class="ped-ver">${p.status==="aguardando_pagamento"?(p.pagamento.forma===CARTAO?"Pagar com cartão →":"Pagar com Pix →"):"Ver detalhes →"}</span><span class="preco">${brl(p.total)}</span></div></button>`; }).join("")
     : `<div class="vazio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>${abaPed==="and"?"Nenhum pedido em andamento.":"Nenhum pedido finalizado ainda."}${abaPed==="and"?`<button class="btn btn-p" type="button" id="ir-cardapio" style="flex:none">Ver cardápio</button>`:""}</div>`;
+  // finalizados: o cliente pode limpar o próprio histórico (some só deste aparelho)
+  if(abaPed==="fin" && lista.length) $("lista-ped").insertAdjacentHTML("beforeend", `<button class="btn" type="button" id="limpar-fin" style="flex:none;margin:6px auto 0;background:none;border:1px solid var(--linha);color:var(--texto-2);font-size:14px;padding:10px 16px">Limpar finalizados</button>`);
+  $("limpar-fin")?.addEventListener("click",()=>{ if(!confirm("Tirar os pedidos finalizados desta lista?")) return; meus=meus.filter(m=>!m.dados || !FINAIS.includes(m.dados.status)); salvarMeus(); pintarBadge(); pintarPedidos(); });
   $("lista-ped").querySelectorAll("[data-ped]").forEach(b=>b.onclick=()=>abrirDetalhe(b.dataset.ped));
   $("ir-cardapio")?.addEventListener("click",()=>mostrar("inicio"));
 }
