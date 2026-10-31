@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Modelo da comanda KANANBA</title>
+<!--
+  MODELO DA COMANDA (impressora térmica 58 mm)
+  ===========================================
+  Este arquivo é o desenho das duas vias que saem na impressora.
+  Pode editar à vontade: textos, ordem das linhas, tamanho da letra.
+
+  As palavras entre {{ chaves duplas }} são trocadas pelos dados do pedido.
+  Pode mudar elas de lugar ou apagar a linha inteira, mas não mude o nome.
+
+    {{CODIGO}}        código do pedido (ex.: Z9WD)
+    {{DATA_HORA}}     dia e hora do pedido
+    {{TIPO}}          ENTREGA ou RETIRADA
+    {{CLIENTE}}       nome do cliente
+    {{TELEFONE}}      telefone do cliente
+    {{ENDERECO}}      endereço completo (ou "CLIENTE RETIRA NO LOCAL")
+    {{ITENS}}         lista de itens com quantidade, preço e observações
+    {{OBS_PEDIDO}}    observação geral do pedido
+    {{SUBTOTAL}}      valor dos itens
+    {{TAXA_ENTREGA}}  taxa de entrega
+    {{TOTAL}}         total do pedido
+    {{PAGAMENTO}}     forma de pagamento / o que cobrar / troco
+    {{IMPRESSO_EM}}   dia e hora da impressão
+
+  Linhas com data-se="obs" só aparecem se o pedido tiver observação geral.
+  Linhas com data-se="taxa" só aparecem se tiver taxa de entrega.
+
+  Dica: acentos e emojis podem sair estranhos na impressora térmica. Teste antes.
+-->
+<style>
+  @page{size:58mm auto;margin:0}
+  *{box-sizing:border-box;color:#000!important;background:#fff!important}
+  body{margin:0;width:58mm;padding:2mm 3mm 6mm;font:12px/1.3 Arial,Helvetica,sans-serif}
+  .via{page-break-after:always;break-after:page}
+  .via:last-child{page-break-after:auto;break-after:auto}
+  .centro{text-align:center}
+  .grande{font-size:16px;font-weight:900}
+  .codigo{font-size:22px;font-weight:900;margin:2px 0}
+  hr{border:0;border-top:1px dashed #000;margin:5px 0}
+  .linha{display:flex;justify-content:space-between;gap:6px}
+  .linha span:last-child{white-space:nowrap}
+  .sub{padding-left:8px;font-size:11px}
+</style>
+</head>
+<body>
+
+<!-- ======================= VIA DA SACOLA ======================= -->
+<section class="via" data-via="sacola">
+  <div class="centro grande">KANANBA</div>
+  <div class="centro">VIA DA SACOLA</div>
+  <div class="centro codigo">#{{CODIGO}}</div>
+  <div class="centro">{{DATA_HORA}} · {{TIPO}}</div>
+  <hr>
+  <div><b>{{CLIENTE}}</b><br>{{TELEFONE}}</div>
+  <div>{{ENDERECO}}</div>
+  <hr>
+  {{ITENS}}
+  <div data-se="obs"><hr><b>OBS DO PEDIDO:</b> {{OBS_PEDIDO}}</div>
+  <hr>
+  <div class="linha"><span>Itens</span><span>{{SUBTOTAL}}</span></div>
+  <div class="linha" data-se="taxa"><span>Entrega</span><span>{{TAXA_ENTREGA}}</span></div>
+  <div class="linha grande"><span>TOTAL</span><span>{{TOTAL}}</span></div>
+  <div>{{PAGAMENTO}}</div>
+  <hr>
+  <div class="centro">Obrigado pela preferencia!<br>Peca de novo: kananba.com.br</div>
+</section>
+
+<!-- ======================= VIA DO CAIXA ======================= -->
+<section class="via" data-via="caixa">
+  <div class="centro grande">KANANBA</div>
+  <div class="centro">VIA DO CAIXA</div>
+  <div class="centro codigo">#{{CODIGO}}</div>
+  <div class="centro">{{DATA_HORA}} · {{TIPO}}</div>
+  <hr>
+  <div><b>{{CLIENTE}}</b><br>{{TELEFONE}}</div>
+  <div>{{ENDERECO}}</div>
+  <hr>
+  {{ITENS}}
+  <div data-se="obs"><hr><b>OBS DO PEDIDO:</b> {{OBS_PEDIDO}}</div>
+  <hr>
+  <div class="linha"><span>Itens</span><span>{{SUBTOTAL}}</span></div>
+  <div class="linha" data-se="taxa"><span>Entrega</span><span>{{TAXA_ENTREGA}}</span></div>
+  <div class="linha grande"><span>TOTAL</span><span>{{TOTAL}}</span></div>
+  <div>{{PAGAMENTO}}</div>
+  <hr>
+  <div class="centro">Impresso {{IMPRESSO_EM}}</div>
+</section>
+
+</body>
+</html>

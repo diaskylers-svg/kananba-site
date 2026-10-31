@@ -645,12 +645,40 @@ const CSS_COMANDA = `@page{size:58mm auto;margin:0}
   hr{border:0;border-top:1px dashed #000;margin:5px 0}
   .it{display:flex;justify-content:space-between;gap:6px}.it span:last-child{white-space:nowrap}
   .sub{padding-left:8px;font-size:11px}.end{margin-top:3px}`;
+// o desenho das vias vem do arquivo comanda-modelo.html (editável à mão); se falhar, usa o padrão daqui
+async function comandaDoModelo(p){
+  const r = await fetch("/comanda-modelo.html", {cache:"no-store"});
+  if(!r.ok) throw new Error("sem modelo");
+  const doc = new DOMParser().parseFromString(await r.text(), "text/html");
+  const e = p.entrega, c = p.cliente;
+  const itens = p.itens.map(i => `<div class="linha"><span>${i.qtd}x ${tx(i.nome)}</span><span>${brl(i.total)}</span></div>`
+    + (i.detalhe?`<div class="sub">${tx(i.detalhe)}</div>`:"")
+    + (i.ponto||i.obs?`<div class="sub"><b>OBS: ${tx([i.ponto,i.obs].filter(Boolean).join(" · "))}</b></div>`:"")).join("");
+  const endereco = e.modo==="Entrega"
+    ? `${tx(e.rua)}, ${tx(e.numero)}${e.complemento?" - "+tx(e.complemento):""}<br>${tx(e.bairro)}${e.cidade?" - "+tx(e.cidade):""}${e.referencia?`<br>Ref.: ${tx(e.referencia)}`:""}`
+    : "<b>CLIENTE RETIRA NO LOCAL</b>";
+  const v = { CODIGO:tx(p.codigo), DATA_HORA:dataHora(p.criadoEm), TIPO:e.modo==="Entrega"?"ENTREGA":"RETIRADA",
+    CLIENTE:tx(c.nome), TELEFONE:fmtTel(c.tel||""), ENDERECO:endereco, ITENS:itens, OBS_PEDIDO:tx(p.obsGeral||""),
+    SUBTOTAL:brl(p.subtotal), TAXA_ENTREGA:brl(p.taxa||0), TOTAL:brl(p.total), PAGAMENTO:linhaPagamento(p),
+    IMPRESSO_EM:dataHora(new Date().toISOString()) };
+  if(!p.obsGeral) doc.querySelectorAll('[data-se="obs"]').forEach(x=>x.remove());
+  if(!p.taxa) doc.querySelectorAll('[data-se="taxa"]').forEach(x=>x.remove());
+  const corpo = doc.body.innerHTML.replace(/\{\{\s*([A-Z_]+)\s*\}\}/g, (m,k) => k in v ? v[k] : "");
+  const estilo = [...doc.querySelectorAll("style")].map(s=>s.textContent).join("\n");
+  if(!doc.querySelector(".via")) throw new Error("modelo sem vias");
+  return `<!doctype html><html><head><meta charset="utf-8"><style>${estilo}</style></head><body>${corpo}</body></html>`;
+}
 let filaImpressao = Promise.resolve();
 function imprimirComanda(p){
-  filaImpressao = filaImpressao.then(() => new Promise(fim => {
+  filaImpressao = filaImpressao.then(async () => {
+    let html;
+    try{ html = await comandaDoModelo(p); }
+    catch(e){ html = `<!doctype html><html><head><meta charset="utf-8"><style>${CSS_COMANDA}</style></head><body>${viaHTML(p,"sacola")}${viaHTML(p,"caixa")}</body></html>`; }
+    return html;
+  }).then(html => new Promise(fim => {
     const f = document.createElement("iframe");
     f.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
-    f.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><style>${CSS_COMANDA}</style></head><body>${viaHTML(p,"sacola")}${viaHTML(p,"caixa")}</body></html>`;
+    f.srcdoc = html;
     f.onload = () => {
       try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){}
       setTimeout(() => { f.remove(); fim(); }, 1500);

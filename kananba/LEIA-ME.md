@@ -14,3 +14,9 @@
 | `MP_PUBLIC_KEY` | Public Key do Mercado Pago (mesma tela do Access Token). Liga o pagamento com cartão de crédito no site. Sem ela, a opção não aparece. |
 
 Depois de mudar uma variável, faça um novo deploy (Implanta → Trigger deploy).
+
+## Comanda da impressora (58 mm)
+
+- `public/comanda-modelo.html` — o desenho das duas vias (sacola e caixa). Edite à mão: textos, ordem, tamanho da letra.
+  As palavras entre `{{ }}` são trocadas pelos dados do pedido (a lista está no topo do arquivo).
+- Para testar, abra o painel, ligue "🖨 Impressão" e use o botão Imprimir de um pedido.
