@@ -639,7 +639,8 @@ function viaHTML(p, via){
 }
 const CSS_COMANDA = `@page{size:58mm auto;margin:0}
   *{box-sizing:border-box;color:#000!important;background:#fff!important}
-  body{margin:0 auto;width:48mm;padding:1mm 0 6mm;font:13px/1.3 Arial,Helvetica,sans-serif}
+  body{margin:0;width:45mm;padding:0 0 6mm 1mm;font:13px/1.3 Arial,Helvetica,sans-serif}
+  body,div,span,b{overflow-wrap:anywhere;word-break:break-word}
   .via{page-break-after:always;break-after:page}.via:last-child{page-break-after:auto;break-after:auto}
   .c{text-align:center}.g{font-size:16px;font-weight:900}.gg{font-size:22px;font-weight:900;margin:2px 0}
   hr{border:0;border-top:1px dashed #000;margin:5px 0}
@@ -669,7 +670,7 @@ async function comandaDoModelo(p){
   }).join("");
   doc.querySelectorAll("template").forEach(x=>x.remove());
   const endereco = e.modo==="Entrega"
-    ? `${tx(e.rua)}, ${tx(e.numero)}${e.complemento?" - "+tx(e.complemento):""}<br>${tx(e.bairro)}${e.cidade?" - "+tx(e.cidade):""}${e.referencia?`<br>Ref.: ${tx(e.referencia)}`:""}`
+    ? `${tx(e.rua)}<br><b class="numero">Nº ${tx(e.numero)}${e.complemento?" · "+tx(e.complemento):""}</b><br>${tx(e.bairro)}${e.cidade?" - "+tx(e.cidade):""}${e.referencia?`<br>Ref.: ${tx(e.referencia)}`:""}`
     : "<b>CLIENTE RETIRA NO LOCAL</b>";
   const v = { CODIGO:tx(p.codigo), DATA_HORA:dataHora(p.criadoEm), TIPO:e.modo==="Entrega"?"ENTREGA":"RETIRADA",
     CLIENTE:tx(c.nome), TELEFONE:fmtTel(c.tel||""), ENDERECO:endereco, ITENS:itens, OBS_PEDIDO:tx(p.obsGeral||""),

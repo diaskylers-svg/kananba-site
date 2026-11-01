@@ -17,7 +17,7 @@
     {{TIPO}}          ENTREGA ou RETIRADA
     {{CLIENTE}}       nome do cliente
     {{TELEFONE}}      telefone do cliente
-    {{ENDERECO}}      endereço completo (ou "CLIENTE RETIRA NO LOCAL")
+    {{ENDERECO}}      endereço completo, com o número em destaque (ou "CLIENTE RETIRA NO LOCAL")
     {{ITENS}}         lista de itens com quantidade, preço e observações
     {{OBS_PEDIDO}}    observação geral do pedido
     {{SUBTOTAL}}      valor dos itens
@@ -38,22 +38,29 @@
 <style>
   @page{size:58mm auto;margin:0}
   *{box-sizing:border-box;color:#000!important;background:#fff!important}
-  /* largura útil da impressora de 58 mm é ~48 mm: se sair cortado, diminua; se sair estreito, aumente */
-  body{margin:0 auto;width:48mm;padding:1mm 0 6mm;font:12px/1.35 Consolas,"Courier New",monospace}
+  /* largura do texto: se cortar no lado direito, diminua o 45mm; se sobrar muito espaço, aumente */
+  body{margin:0;width:45mm;padding:0 0 6mm 1mm;font:12px/1.35 Consolas,"Courier New",monospace}
+  /* texto longo desce para a linha de baixo em vez de ser cortado */
+  body,div,p,span,b{overflow-wrap:anywhere;word-break:break-word}
+  /* espaço em branco no topo da via da sacola, para o grampo não pegar no texto */
+  .grampo{height:16mm;border-bottom:1px dashed #000;text-align:center;font-size:9px;padding-top:6mm;margin-bottom:3mm}
+  .numero{font-size:15px}
   .via{page-break-after:always;break-after:page}
   .via:last-child{page-break-after:auto;break-after:auto}
   .centro{text-align:center}
   .marca{font-size:15px;font-weight:700}
-  .enfeite{font-size:10px;white-space:nowrap;overflow:hidden}
-  .codigo{font-size:19px;margin:6px 0 2px}
-  .titulo{text-align:center;font-weight:700;margin:2px 0 4px}
-  hr{border:0;border-top:1.5px solid #000;margin:6px 0}
-  p{margin:5px 0}
-  .item{margin:6px 0}
+  .enfeite{font-size:10px;white-space:nowrap;overflow:hidden;margin-bottom:6px}
+  .codigo{font-size:19px;margin:14px 0 4px}
+  .titulo{text-align:center;font-weight:700;margin:4px 0 10px}
+  /* espaço entre os grupos: aumente os números para separar mais */
+  hr{border:0;border-top:1.5px solid #000;margin:12px 0}
+  p{margin:9px 0}
+  .item{margin:0 0 12px}
   .preco{display:flex;font-weight:700}
-  .preco .tracos{flex:1;overflow:hidden;white-space:nowrap}
+  .preco .tracos{flex:1;min-width:1ch;overflow:hidden;white-space:nowrap}
+  .preco span:first-child,.preco span:last-child{flex-shrink:0;white-space:nowrap}
   .tracejado{border-top:1.5px dashed #000}
-  .total{text-align:center;font-size:17px;margin:4px 0}
+  .total{text-align:center;font-size:17px;margin:10px 0}
 </style>
 </head>
 <body>
@@ -70,6 +77,7 @@
 
 <!-- ======================= VIA DA SACOLA ======================= -->
 <section class="via" data-via="sacola">
+  <div class="grampo">grampear aqui</div>
   <div class="centro">★</div>
   <div class="centro marca">★★ KANANBA ★★</div>
   <div class="centro">•[Espetos]•</div>
