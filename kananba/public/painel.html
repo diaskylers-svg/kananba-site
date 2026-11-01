@@ -651,9 +651,23 @@ async function comandaDoModelo(p){
   if(!r.ok) throw new Error("sem modelo");
   const doc = new DOMParser().parseFromString(await r.text(), "text/html");
   const e = p.entrega, c = p.cliente;
-  const itens = p.itens.map(i => `<div class="linha"><span>${i.qtd}x ${tx(i.nome)}</span><span>${brl(i.total)}</span></div>`
-    + (i.detalhe?`<div class="sub">${tx(i.detalhe)}</div>`:"")
-    + (i.ponto||i.obs?`<div class="sub"><b>OBS: ${tx([i.ponto,i.obs].filter(Boolean).join(" · "))}</b></div>`:"")).join("");
+  // formato de cada item: <template data-item> do modelo (se existir) ou o padrão
+  const tplItem = doc.querySelector("template[data-item]");
+  const itens = p.itens.map(i => {
+    const obsItem = [i.ponto,i.obs].filter(Boolean).join(" · ");
+    if(tplItem){
+      const det = (i.detalhe||"").replace(/^[^:]{1,20}:\s*/,"").split(/,\s*/).filter(Boolean).map(tx).join(",<br>");
+      const vi = { QTD:i.qtd, NOME:tx(i.nome), PRECO:brl(i.total), DETALHES:det, OBS_ITEM:tx(obsItem) };
+      const t = document.createElement("div"); t.innerHTML = tplItem.innerHTML;
+      if(!det) t.querySelectorAll('[data-se="detalhes"]').forEach(x=>x.remove());
+      if(!obsItem) t.querySelectorAll('[data-se="obs_item"]').forEach(x=>x.remove());
+      return t.innerHTML.replace(/\{\{\s*([A-Z_]+)\s*\}\}/g, (m,k) => k in vi ? vi[k] : "");
+    }
+    return `<div class="linha"><span>${i.qtd}x ${tx(i.nome)}</span><span>${brl(i.total)}</span></div>`
+      + (i.detalhe?`<div class="sub">${tx(i.detalhe)}</div>`:"")
+      + (obsItem?`<div class="sub"><b>OBS: ${tx(obsItem)}</b></div>`:"");
+  }).join("");
+  doc.querySelectorAll("template").forEach(x=>x.remove());
   const endereco = e.modo==="Entrega"
     ? `${tx(e.rua)}, ${tx(e.numero)}${e.complemento?" - "+tx(e.complemento):""}<br>${tx(e.bairro)}${e.cidade?" - "+tx(e.cidade):""}${e.referencia?`<br>Ref.: ${tx(e.referencia)}`:""}`
     : "<b>CLIENTE RETIRA NO LOCAL</b>";
