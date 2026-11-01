@@ -39,7 +39,9 @@
   @page{size:58mm auto;margin:0}
   *{box-sizing:border-box;color:#000!important;background:#fff!important}
   /* largura do texto: se cortar no lado direito, diminua o 40mm; se sobrar muito espaço, aumente */
-  body{margin:0;width:40mm;padding:0 0 6mm 1mm;font:11px/1.35 Consolas,"Courier New",monospace}
+  /* para empurrar o texto mais para a ESQUERDA, use um número negativo (ex.: -3mm); para a direita, positivo */
+  :root{--esquerda:0mm}
+  body{margin:0 0 0 var(--esquerda);width:40mm;padding:0 0 6mm 1mm;font:11px/1.35 Consolas,"Courier New",monospace}
   /* texto longo desce para a linha de baixo em vez de ser cortado */
   body,div,p,span,b{overflow-wrap:anywhere;word-break:break-word}
   /* espaço em branco no topo da via da sacola, para o grampo não pegar no texto */
