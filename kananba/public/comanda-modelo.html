@@ -34,7 +34,8 @@
 <style>
   @page{size:58mm auto;margin:0}
   *{box-sizing:border-box;color:#000!important;background:#fff!important}
-  body{margin:0;width:58mm;padding:2mm 3mm 6mm;font:12px/1.3 Arial,Helvetica,sans-serif}
+  /* largura útil da impressora de 58 mm é ~48 mm: se sair cortado, diminua; se sair estreito, aumente */
+  body{margin:0 auto;width:48mm;padding:1mm 0 6mm;font:13px/1.3 Arial,Helvetica,sans-serif}
   .via{page-break-after:always;break-after:page}
   .via:last-child{page-break-after:auto;break-after:auto}
   .centro{text-align:center}
