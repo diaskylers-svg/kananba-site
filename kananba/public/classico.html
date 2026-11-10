@@ -724,10 +724,10 @@ function renderInfo(){
   const aberto = estaAberto();
   $("placa").classList.toggle("aberta", aberto);
   $("neon").textContent = aberto ? "ABERTO" : "FECHADO";
-  $("placa-hora").innerHTML = aberto ? `Pedidos até <b>0h30</b>` : `Abrimos às <b>17h30</b> · até 0h30`;
+  $("placa-hora").innerHTML = aberto ? `Pedidos até <b>0h30</b>` : `Abrimos às <b>18h30</b> · até 0h30`;
 }
 function estaAberto(){
-  // horário de Brasília; abre 17h30 (1050 min) e fecha 0h30 (30 min)
+  // horário de Brasília; abre 18h30 (1110 min) e fecha 0h30 (30 min)
   try{
     const partes = new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(new Date());
     const hh = +partes.find(x=>x.type==="hour").value % 24, mm = +partes.find(x=>x.type==="minute").value;

@@ -11,8 +11,8 @@ export const NEGOCIO = {
   taxaEntrega: 5,              // ⚠ PROVISÓRIO — taxa fixa em reais
   taxaDescricao: "Taxa fixa de entrega.",
   completinhoDesc: "+ baião, vinagrete e farofa",
-  horario: "17h30 às 0h30",
-  abre: 17 * 60 + 30,          // minutos do dia (17h30)
+  horario: "18h30 às 0h30",
+  abre: 18 * 60 + 30,          // minutos do dia (18h30)
   fecha: 30,                   // 0h30
   retirada: true,
   pagamentos: ["Pix", "Cartão de crédito", "Cartão na entrega", "Dinheiro"], // "Cartão de crédito" = pago no site (só aparece com MP_PUBLIC_KEY configurada)
