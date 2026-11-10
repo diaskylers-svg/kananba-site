@@ -28,7 +28,7 @@ export const NEGOCIO = {
 // esgotado: true = some do site e dos combos (sem estoque). Para voltar, apague o "esgotado: true".
 export const CARDAPIO = [
   { id: "coxao",     grupo: "espetos", nome: "Coxão mole", desc: "Carne macia, temperada do jeito da casa.", preco: 18.7, precoCompleto: 25.3, carne: true, esgotado: true },
-  { id: "alcatra",   grupo: "espetos", nome: "Alcatra",    desc: "Corte nobre, macio e suculento.",          preco: 25.3, precoCompleto: 31.9, carne: true, semCombo: true, esgotado: true },
+  { id: "alcatra",   grupo: "espetos", nome: "Alcatra",    desc: "Corte nobre, macio e suculento.",          preco: 25.3, precoCompleto: 31.9, carne: true, semCombo: true },
   { id: "paleta",    grupo: "espetos", nome: "Paleta",     desc: "Corte suculento, com sabor marcante.",    preco: 18.7, precoCompleto: 25.3, carne: true },
   { id: "misto",     grupo: "espetos", nome: "Misto",      desc: "Carne e frango intercalados.",            preco: 18.7, precoCompleto: 25.3, carne: true },
   { id: "frango",    grupo: "espetos", nome: "Frango",     desc: "Cubos de frango dourados na brasa.",      preco: 18.7, precoCompleto: 25.3, carne: false },
