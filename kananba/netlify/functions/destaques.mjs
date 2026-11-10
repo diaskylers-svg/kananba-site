@@ -10,7 +10,7 @@ export default async () => {
   const real = (r.pedidos || 0) >= MINIMO_PEDIDOS;
   const grupos = {
     combos: COMBOS.map((c) => c.id),
-    espetos: CARDAPIO.filter((c) => c.grupo === "espetos").map((c) => c.id),
+    espetos: CARDAPIO.filter((c) => c.grupo === "espetos" && !c.esgotado).map((c) => c.id),
     acomp: CARDAPIO.filter((c) => c.grupo === "acomp" && !c.oculto).map((c) => c.id),
     bebidas: CARDAPIO.filter((c) => c.grupo === "bebidas" && c.preco != null).map((c) => c.id)
   };

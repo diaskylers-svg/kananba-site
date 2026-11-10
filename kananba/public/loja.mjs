@@ -25,9 +25,10 @@ export const NEGOCIO = {
 
 // preco = só o espeto · precoCompleto = Completinho (espeto + baião, vinagrete e farofa)
 // semCombo: true = não aparece para escolher nos combos
+// esgotado: true = some do site e dos combos (sem estoque). Para voltar, apague o "esgotado: true".
 export const CARDAPIO = [
-  { id: "coxao",     grupo: "espetos", nome: "Coxão mole", desc: "Carne macia, temperada do jeito da casa.", preco: 18.7, precoCompleto: 25.3, carne: true },
-  { id: "alcatra",   grupo: "espetos", nome: "Alcatra",    desc: "Corte nobre, macio e suculento.",          preco: 25.3, precoCompleto: 31.9, carne: true, semCombo: true },
+  { id: "coxao",     grupo: "espetos", nome: "Coxão mole", desc: "Carne macia, temperada do jeito da casa.", preco: 18.7, precoCompleto: 25.3, carne: true, esgotado: true },
+  { id: "alcatra",   grupo: "espetos", nome: "Alcatra",    desc: "Corte nobre, macio e suculento.",          preco: 25.3, precoCompleto: 31.9, carne: true, semCombo: true, esgotado: true },
   { id: "paleta",    grupo: "espetos", nome: "Paleta",     desc: "Corte suculento, com sabor marcante.",    preco: 18.7, precoCompleto: 25.3, carne: true },
   { id: "misto",     grupo: "espetos", nome: "Misto",      desc: "Carne e frango intercalados.",            preco: 18.7, precoCompleto: 25.3, carne: true },
   { id: "frango",    grupo: "espetos", nome: "Frango",     desc: "Cubos de frango dourados na brasa.",      preco: 18.7, precoCompleto: 25.3, carne: false },
@@ -74,4 +75,4 @@ export const COMBOS = [
 
 // Selos: enquanto não houver pedidos suficientes, o site mostra "Sugestão da casa" nestes itens.
 // Depois de alguns pedidos, troca sozinho para "Mais pedido" com base nas vendas reais.
-export const DESTAQUES_CASA = { combos: "combo3", espetos: "coxao", acomp: "baiao", bebidas: "lata-coca-cola" };
+export const DESTAQUES_CASA = { combos: "combo3", espetos: "paleta", acomp: "baiao", bebidas: "lata-coca-cola" };

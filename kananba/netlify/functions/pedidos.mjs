@@ -18,7 +18,7 @@ export default async (req) => {
       const sab = i.sabores && typeof i.sabores === "object" ? i.sabores : {};
       let soma = 0; const partes = []; const limpo = {};
       for (const [sid, n] of Object.entries(sab)) {
-        const e = CARDAPIO.find((c) => c.id === sid && c.grupo === "espetos" && !c.semCombo);
+        const e = CARDAPIO.find((c) => c.id === sid && c.grupo === "espetos" && !c.semCombo && !c.esgotado);
         const q = Math.floor(Number(n));
         if (!e || !(q >= 1 && q <= combo.espetos)) return erro("Sabor inválido no combo. Atualize a página e tente de novo.");
         soma += q; limpo[e.id] = q; partes.push(`${q}× ${e.nome}`);
@@ -39,6 +39,7 @@ export default async (req) => {
     const prod = CARDAPIO.find((c) => c.id === i?.id);
     const qtd = Math.floor(Number(i?.qtd));
     if (!prod || !(qtd >= 1 && qtd <= 50)) return erro("Tem um item inválido no pedido. Atualize a página e tente de novo.");
+    if (prod.esgotado) return erro(`"${prod.nome}" esgotou. Tire do carrinho e escolha outro sabor.`);
     const completo = !!i.completo && prod.precoCompleto != null;
     const preco = completo ? prod.precoCompleto : prod.preco;
     if (preco == null) return erro(`O preço de "${prod.nome}" ainda não foi definido.`);
