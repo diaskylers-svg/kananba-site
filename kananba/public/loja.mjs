@@ -75,4 +75,4 @@ export const COMBOS = [
 
 // Selos: enquanto não houver pedidos suficientes, o site mostra "Sugestão da casa" nestes itens.
 // Depois de alguns pedidos, troca sozinho para "Mais pedido" com base nas vendas reais.
-export const DESTAQUES_CASA = { combos: "combo3", espetos: "paleta", acomp: "baiao", bebidas: "lata-coca-cola" };
+export const DESTAQUES_CASA = { combos: "combo3", espetos: "frango", acomp: "baiao", bebidas: "lata-coca-cola" };
