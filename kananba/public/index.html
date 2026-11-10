@@ -367,7 +367,7 @@ function svgPote(id){
     <ellipse cx="100" cy="98" rx="62" ry="22" fill="${cor[0]}"/>${p}<path d="M38 98c0 34 28 52 62 52s62-18 62-52" fill="#7a5a3a"/></svg>`;
 }
 function svgCombo(c){
-  const sab=["coxao","frango","misto","paleta"].slice(0,c.espetos);
+  const sab=["paleta","frango","misto","alcatra"].slice(0,c.espetos);
   const g = sab.map((id,i)=>`<g transform="translate(0 ${-30+i*20})">${svgEspeto(id).replace(/^[\s\S]*?<g transform="rotate/,'<g transform="rotate').replace(/<\/svg>$/,"")}</g>`).join("");
   return `<svg class="thumb" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><ellipse cx="100" cy="190" rx="110" ry="40" fill="#ff7a00" opacity=".22"/>${g}<text x="188" y="190" text-anchor="end" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="40" fill="#ff9800">${c.espetos}×</text></svg>`;
 }

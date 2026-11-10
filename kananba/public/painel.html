@@ -1183,7 +1183,7 @@ function renderPrevisao(){
   } else {
     // sem vendas ainda: simula um pedido típico (2 espetos com Completinho em 1 deles, 1 refri lata)
     mediaPed = 15;
-    const tipico = { itens:[{id:"coxao",qtd:1,completo:true},{id:"frango",qtd:1},{id:"lata-coca-cola",qtd:1}] };
+    const tipico = { itens:[{id:"paleta",qtd:1,completo:true},{id:"frango",qtd:1},{id:"lata-coca-cola",qtd:1}] };
     porPedido = consumoVenda(tipico, CAD, {});
     $("prev-base").innerHTML = `Ainda não há vendas concluídas neste mês, então a previsão usa um <b>pedido típico</b> (2 espetos, 1 Completinho e 1 refri). Quando as vendas entrarem, ela passa a usar o seu movimento real.`;
   }
