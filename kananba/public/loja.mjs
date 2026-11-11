@@ -36,7 +36,7 @@ export const CARDAPIO = [
   { id: "asa",       grupo: "espetos", nome: "Asas de frango", desc: "Asinhas temperadas, douradas na brasa.",  preco: 20.9, precoCompleto: 27.5, carne: false },
   { id: "toscana",   grupo: "espetos", nome: "Linguiça toscana", curto: "Toscana", desc: "Linguiça suculenta, assada na hora.",  preco: 18.7, precoCompleto: 25.3, carne: false },
   { id: "calabresa", grupo: "espetos", nome: "Calabresa",  desc: "Calabresa defumada, tostadinha na brasa.", preco: 18.7, precoCompleto: 25.3, carne: false },
-  { id: "baiao",     grupo: "acomp",   nome: "Baião",      desc: "Porção de baião de dois.",                preco: 9.9 },
+  { id: "baiao",     grupo: "acomp",   nome: "Baião",      desc: "Porção de baião de dois, 200 g.",          preco: 9.9 },
   { id: "arroz",     grupo: "acomp",   nome: "Arroz branco", desc: "Porção de arroz branco soltinho, 200 g.",      preco: 11 },
   // adicional: true = aparece em "Adicionais", dentro de Acompanhamentos · oculto: true = não aparece sozinho no cardápio
   { id: "vinagrete", grupo: "acomp",   nome: "Vinagrete",  desc: "Porção de vinagrete fresquinho.",         preco: 5.5, adicional: true },
